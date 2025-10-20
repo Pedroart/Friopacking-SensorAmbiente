@@ -1,7 +1,7 @@
 import asyncio
 from bleak import BleakScanner, BleakClient
 
-DEVICE_NAME = "TMP117-BLE"
+DEVICE_NAME = "FrioTunel-Beta"
 UUID_RX = "0000fff1-0000-1000-8000-00805f9b34fb"
 UUID_TX = "0000fff2-0000-1000-8000-00805f9b34fb"
 
