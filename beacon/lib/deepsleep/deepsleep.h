@@ -66,4 +66,6 @@ void blinkEntry(const Config& cfg);
 // Entra a “deep sleep” por WFE. El WDT te va a resetear al expirar.
 [[noreturn]] void sleepForeverWfe();
 
+void deepPowerOffMostThings();
+
 } // namespace deepsleep
