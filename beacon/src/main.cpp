@@ -253,7 +253,7 @@ static void goToSleep(deepsleep::Config &cfg)
 {
   delay(300);
   adv_lib_end();
-  //deepsleep::deepPowerOffMostThings();
+  // deepsleep::deepPowerOffMostThings();
 
   deepsleep::startLfclk();
   deepsleep::startWdt(cfg);
@@ -286,12 +286,31 @@ void setup()
     uint8_t body[8];
 
     beacon_to_head_body(p, head, sizeof(head), body, sizeof(body));
-
-    uint8_t pkt[10];
-    memcpy(pkt + 0, head, 2);
-    memcpy(pkt + 2, body, 8);
-
+    
     adv_begin("FRIO-SENSOR");
+
+    uint8_t cipher[32]; // sobra, pero está bien
+    size_t cipher_len = 0;
+
+    bool enc_ok = crypto_lib::encrypt_ecb_pkcs7(
+        KEY,
+        body, sizeof(body),
+        cipher, sizeof(cipher),
+        &cipher_len,
+        16);
+
+    if (!enc_ok || cipher_len != 16)
+    {
+      Serial.print("[CRYPTO] enc_ok=");
+      Serial.print(enc_ok ? "true" : "false");
+      Serial.print(" cipher_len=");
+      Serial.println(cipher_len);
+      goToSleep(cfg);
+    }
+
+    uint8_t pkt[2 + 16];
+    memcpy(pkt + 0, head, 2);
+    memcpy(pkt + 2, cipher, 16);
 
     bool ok = adv_publish_mfg(pkt, sizeof(pkt));
 
