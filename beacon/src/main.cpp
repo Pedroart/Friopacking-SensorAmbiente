@@ -6,7 +6,7 @@
 #include "vinadc.h"
 #include "adv_lib.h"
 #include "crypto_lib.h"
-
+#include "config_mode.h"
 enum class BootMode : uint8_t
 {
   beacon = 0,
@@ -286,7 +286,7 @@ void setup()
     uint8_t body[8];
 
     beacon_to_head_body(p, head, sizeof(head), body, sizeof(body));
-    
+
     adv_begin("FRIO-SENSOR");
 
     uint8_t cipher[32]; // sobra, pero está bien
@@ -322,20 +322,23 @@ void setup()
   }
   else
   {
-    Serial.println("[CONFIG] Mode not implemented yet");
+    Serial.println("[CONFIG] Mode");
 
-    static const uint8_t KEY[16] = {/* 16 bytes */};
+    config_mode::Options opt;
+    opt.idle_timeout_ms = 60 * 1000; // 60s sin uso => apagar
+    opt.blink_period_ms = 250;       // parpadeo rápido
 
-    uint8_t plain[] = {1, 2, 3, 4, 5};
-    uint8_t cipher[32];
-    size_t cipher_len = 0;
+    config_mode::begin(opt);
 
-    bool ok = crypto_lib::encrypt_ecb_pkcs7(KEY, plain, sizeof(plain),
-                                            cipher, sizeof(cipher),
-                                            &cipher_len);
-
-    Serial.println(ok ? "OK" : "FAIL");
-    Serial.println(cipher_len); // múltiplo de 16
+    while (true)
+    {
+      if (config_mode::tick())
+      {
+        // acá llamas a tu sleep real
+        goToSleep(cfg);
+      }
+      delay(10);
+    }
   }
 }
 

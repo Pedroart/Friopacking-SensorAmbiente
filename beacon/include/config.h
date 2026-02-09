@@ -16,6 +16,7 @@
 
 #define KEY_DEVICE_ID "device_id"
 #define KEY_CHIP_TEMP_OFFSET_X100 "chip_toff_x100"
+#define KEY_TX_POWER "tx_power_u8";
 
 static const uint8_t KEY[16] = {
   0xA3, 0x7F, 0x1C, 0xD9, 0x88, 0x4E, 0x21, 0xB6,
