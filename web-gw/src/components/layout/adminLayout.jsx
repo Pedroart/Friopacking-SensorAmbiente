@@ -1,6 +1,10 @@
+import { useState } from 'preact/hooks';
 import './adminLayout.css';
 
 export default function AdminLayout({ children, title = "Overview" }) {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     
     // SVG Icons minimal versions as placeholders
     const icons = {
@@ -11,12 +15,20 @@ export default function AdminLayout({ children, title = "Overview" }) {
         history: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></svg>,
         exceptions: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>,
         reports: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>,
-        users: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        users: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>,
+        menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
     };
 
     return (
         <div className="admin-layout">
-            <aside className="admin-sidebar">
+            
+            {/* Mobile Overlay Background */}
+            <div 
+                className={`sidebar-overlay ${isMobileMenuOpen ? 'open' : ''}`} 
+                onClick={() => setIsMobileMenuOpen(false)}
+            ></div>
+
+            <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <div className="avatar-initials">PA</div>
                     <div className="user-info">
@@ -26,35 +38,40 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 </div>
                 
                 <nav className="sidebar-nav">
-                    <a href="/" className="nav-item active">
+                    <a href="/" className="nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.overview} Overview
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.dashboard} Dashboard
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.projects} Proyectos
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.clients} Clientes
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.history} Historial
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.exceptions} Excepciones
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.reports} Reportes
                     </a>
-                    <a href="/" className="nav-item">
+                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.users} Usuarios
                     </a>
                 </nav>
             </aside>
 
             <header className="admin-topbar">
-                <h2 className="topbar-title">{title}</h2>
+                <div className="topbar-left">
+                    <button className="hamburger-btn" onClick={toggleMobileMenu} aria-label="Toggle Menu">
+                        {icons.menu}
+                    </button>
+                    <h2 className="topbar-title">{title}</h2>
+                </div>
                 <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
             </header>
 
