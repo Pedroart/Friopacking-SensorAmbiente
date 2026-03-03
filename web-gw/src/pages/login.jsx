@@ -1,40 +1,41 @@
-//import {useRef, useEffect} from "preact"
+import "./login.css"
 
 export default function Login() {
     return (
-        <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-        }}>
-            <h1>Login</h1>
-            <form>
-                <input
-                type="text"
-                name="login"
-                placeholder="Login"
-                aria-label="Login"
-                autoComplete="username"
-                required
-                />
-                <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                aria-label="Password"
-                autoComplete="current-password"
-                required
-                />
-                <fieldset>
-                <label htmlFor="remember">
-                    <input type="checkbox" role="switch" id="remember" name="remember" />
-                    Remember me
-                </label>
-                </fieldset>
-                <button type="submit">
-                Login
-                </button>
-            </form>
-        </div>
+        <main className="login-main">
+            <article className="login-card">
+                <hgroup>
+                    <h1>Bienvenido</h1>
+                    <p>Por favor, ingrese sus credenciales.</p>
+                </hgroup>
+                <form>
+                    <input
+                        type="text"
+                        name="login"
+                        placeholder="Usuario"
+                        aria-label="Usuario"
+                        autoComplete="username"
+                        required
+                    />
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Contraseña"
+                        aria-label="Contraseña"
+                        autoComplete="current-password"
+                        required
+                    />
+                    <fieldset>
+                        <label htmlFor="remember">
+                            <input type="checkbox" role="switch" id="remember" name="remember" />
+                            Recordarme
+                        </label>
+                    </fieldset>
+                    <button type="submit">
+                        Iniciar Sesión
+                    </button>
+                </form>
+            </article>
+        </main>
     )
 }
