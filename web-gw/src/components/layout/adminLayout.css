@@ -79,6 +79,7 @@
     flex-direction: column;
     gap: 0.5rem;
     overflow-y: auto;
+    justify-content: flex-start;
 }
 
 .nav-item {
