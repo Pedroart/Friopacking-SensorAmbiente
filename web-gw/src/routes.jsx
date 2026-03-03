@@ -14,12 +14,28 @@ function ScrollToTop() {
   return true
 }
 
+// Temporary placeholder for the dashboard content
+function DashboardPlaceholder() {
+    return (
+        <div style={{ color: '#94a3b8' }}>
+            <h2>Overview</h2>
+            <p>Seleccione un marcador en el mapa o contenido desde el menú lateral.</p>
+        </div>
+    );
+}
+
+
 export default function Routes() {
     return (
         <Router>
             {/* Login */}
             <Route path='/login' component={
                 () => <WithLayout layout={CanvasLayout} > <ScrollToTop/> <Login/> </WithLayout>
+            } />
+            
+            {/* Dashboard (Admin Layout) */}
+            <Route path='/' component={
+                () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <DashboardPlaceholder/> </WithLayout>
             } />
         </Router>
     )

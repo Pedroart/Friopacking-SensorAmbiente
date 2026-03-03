@@ -1,6 +1,13 @@
+import { route } from 'preact-router';
 import "./login.css"
 
 export default function Login() {
+    
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        route('/');
+    };
+
     return (
         <main className="login-main">
             <article className="login-card">
@@ -8,7 +15,7 @@ export default function Login() {
                     <h1>Bienvenido</h1>
                     <p>Por favor, ingrese sus credenciales.</p>
                 </hgroup>
-                <form>
+                <form onSubmit={handleSubmit}>
                     <input
                         type="text"
                         name="login"

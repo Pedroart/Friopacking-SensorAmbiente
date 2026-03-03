@@ -45,7 +45,7 @@ body, html {
 }
 
 .login-card hgroup {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
@@ -69,25 +69,28 @@ body, html {
   margin-bottom: 0;
 }
 
+.login-card fieldset {
+  margin-bottom: 0.5rem;
+}
+
 /* Enhancing Pico's Inputs for the Dark Glass look */
 .login-card input[type="text"],
 .login-card input[type="password"] {
   background-color: rgba(15, 23, 42, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.3s ease;
   border-radius: 10px;
+  border: none;
 }
 
 .login-card input[type="text"]:focus,
 .login-card input[type="password"]:focus {
   background-color: rgba(15, 23, 42, 0.6);
-  border-color: var(--pico-primary);
-  box-shadow: 0 0 0 3px rgba(0,0,0,0.3); /* Safe fallback */
+  border: none;
 }
 
 /* Beautiful Gradient Button */
 .login-card button {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   font-weight: 600;
   letter-spacing: 0.5px;
   border-radius: 10px;
