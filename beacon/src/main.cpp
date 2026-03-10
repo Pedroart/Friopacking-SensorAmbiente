@@ -13,19 +13,22 @@ enum class BootMode : uint8_t
   config = 1
 };
 
+#pragma pack(push, 1)
 struct BeaconPayload
 {
   // HEAD
   int16_t company = 0xF510; // Friopacking S.L.
   // BODY
-  uint8_t device_id = 0;
   uint8_t version_id = 1;
+  uint8_t device_id = 0;
   uint8_t flags = 0;
   int16_t TMP117_tem_x100 = 0;
   int16_t CPU_tem_x100 = 0;
   int8_t BAT_x100 = 0;
 };
+#pragma pack(pop)
 
+/*
 static void beacon_to_head_body(const BeaconPayload &p,
                                 uint8_t *head, size_t head_len,
                                 uint8_t *body, size_t body_len)
@@ -34,8 +37,8 @@ static void beacon_to_head_body(const BeaconPayload &p,
   // company = 0xF510 → [F5, 10]
   if (head && head_len >= 2)
   {
-    head[0] = (uint8_t)((p.company >> 8) & 0xFF); // MSB
-    head[1] = (uint8_t)(p.company & 0xFF);        // LSB
+    head[1] = (uint8_t)((p.company >> 8) & 0xFF); // LSB
+    head[0] = (uint8_t)(p.company & 0xFF);        // MSB
   }
 
   // ---- BODY (8 bytes) ----
@@ -43,20 +46,40 @@ static void beacon_to_head_body(const BeaconPayload &p,
   {
     size_t i = 0;
 
-    body[i++] = p.device_id;
     body[i++] = p.version_id;
+    body[i++] = p.device_id;
     body[i++] = p.flags;
 
     // TMP117_tem_x100 (int16, big-endian)
-    body[i++] = (uint8_t)((p.TMP117_tem_x100 >> 8) & 0xFF);
     body[i++] = (uint8_t)(p.TMP117_tem_x100 & 0xFF);
+    body[i++] = (uint8_t)((p.TMP117_tem_x100 >> 8) & 0xFF);
 
     // CPU_tem_x100 (int16, big-endian)
-    body[i++] = (uint8_t)((p.CPU_tem_x100 >> 8) & 0xFF);
     body[i++] = (uint8_t)(p.CPU_tem_x100 & 0xFF);
+    body[i++] = (uint8_t)((p.CPU_tem_x100 >> 8) & 0xFF);
 
     // BAT_x100 (int8)
     body[i++] = (uint8_t)p.BAT_x100;
+  }
+}
+*/
+
+static void beacon_to_head_body(const BeaconPayload &p,
+                                uint8_t *head, size_t head_len,
+                                uint8_t *body, size_t body_len)
+{
+  const uint8_t *raw = reinterpret_cast<const uint8_t *>(&p);
+
+  // HEAD = company (2 bytes)
+  if (head && head_len >= 2)
+  {
+    memcpy(head, raw, 2);
+  }
+
+  // BODY = resto del payload (8 bytes)
+  if (body && body_len >= 8)
+  {
+    memcpy(body, raw + 2, 8);
   }
 }
 
