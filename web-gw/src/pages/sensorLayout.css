@@ -47,14 +47,16 @@
 
 .sensor-box {
     flex: 1;
-    background: #1e293b; /* Volver a color solido limpio */
-    border-radius: 8px; /* Menos redondo, mas serio */
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2); 
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 12px;
+    box-shadow: var(--glass-shadow);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #334155; 
-    color: #cbd5e1; /* Texto secundario por defecto */
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
 }
 
 .sensor-box-header.inline-header {
@@ -346,7 +348,7 @@
 }
 
 .assigned-badge {
-    background: linear-gradient(135deg, #10b981 0%, #38bdf8 100%);
+    background: linear-gradient(135deg, var(--accent-tertiary) 0%, var(--accent-secondary) 100%);
     color: #f8fafc;
     font-size: 0.7rem;
     padding: 0.13rem 0.45rem;
@@ -389,7 +391,7 @@
 
 .sensor-name {
     font-weight: 500;
-    color: #e2e8f0;
+    color: var(--text-primary);
     font-size: 0.8rem;
     white-space: nowrap;
     overflow: hidden;
