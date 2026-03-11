@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import './sensorLayout.css';
 
 // Mock data para previsualizar, con nombres y datos realistas para los sensores
@@ -19,6 +19,55 @@ export default function SensorLayout() {
     const [searchAvailable, setSearchAvailable] = useState('');
     const [showSearchActive, setShowSearchActive] = useState(false);
     const [showSearchAvailable, setShowSearchAvailable] = useState(false);
+
+    const [assignedSlots, setAssignedSlots] = useState({});
+    const [selectedSlot, setSelectedSlot] = useState(null);
+    const [isSheetOpen, setIsSheetOpen] = useState(false);
+    const [sheetSearch, setSheetSearch] = useState('');
+
+    const unassignedSensors = useMemo(() => {
+        const assignedIds = new Set(Object.values(assignedSlots).map(s => s.id));
+        const unassigned = [];
+        mockActiveSensors.forEach(s => { if (!assignedIds.has(s.id)) unassigned.push({...s, type: 'active'}); });
+        mockAvailableSensors.forEach(s => { if (!assignedIds.has(s.id)) unassigned.push({...s, type: 'available'}); });
+        return unassigned;
+    }, [assignedSlots]);
+
+    const filteredUnassigned = unassignedSensors.filter(s => 
+        s.name.toLowerCase().includes(sheetSearch.toLowerCase()) || 
+        s.id.toLowerCase().includes(sheetSearch.toLowerCase()) ||
+        (s.mac && s.mac.toLowerCase().includes(sheetSearch.toLowerCase()))
+    );
+
+    const handleSlotClick = (slot) => {
+        if (assignedSlots[slot.id]) {
+            const confirmRemove = window.confirm(`¿Desea desasignar el sensor de ${slot.label}?`);
+            if (confirmRemove) {
+                const newAssigned = { ...assignedSlots };
+                delete newAssigned[slot.id];
+                setAssignedSlots(newAssigned);
+            }
+        } else {
+            setSelectedSlot(slot);
+            setIsSheetOpen(true);
+            setSheetSearch('');
+        }
+    };
+
+    const handleAssignSensor = (sensor) => {
+        if (!selectedSlot) return;
+        setAssignedSlots(prev => ({
+            ...prev,
+            [selectedSlot.id]: sensor
+        }));
+        setIsSheetOpen(false);
+        setTimeout(() => setSelectedSlot(null), 300);
+    };
+
+    const handleCloseSheet = () => {
+        setIsSheetOpen(false);
+        setTimeout(() => setSelectedSlot(null), 300);
+    };
 
     const filteredActive = mockActiveSensors.filter(s => 
         s.name.toLowerCase().includes(searchActive.toLowerCase()) || 
@@ -149,15 +198,89 @@ export default function SensorLayout() {
                                 <span className="group-badge">8 Slots</span>
                             </div>
                             <div className="slot-grid">
-                                {group.slots.map(slot => (
-                                    <div key={slot.id} className="slot-item empty-slot">
-                                        <div className="slot-number">{slot.label}</div>
-                                        <div className="slot-placeholder">Vacío</div>
-                                    </div>
-                                ))}
+                                {group.slots.map(slot => {
+                                    const assigned = assignedSlots[slot.id];
+                                    return (
+                                        <div 
+                                            key={slot.id} 
+                                            className={`slot-item ${assigned ? 'assigned' : 'empty-slot'}`}
+                                            onClick={() => handleSlotClick(slot)}
+                                            title={assigned ? 'Clic para desasignar' : 'Clic para asignar sensor'}
+                                        >
+                                            <div className="slot-number">{slot.label}</div>
+                                            {assigned ? (
+                                                <div className="slot-assigned-info">
+                                                    <span className="assigned-name" title={assigned.name}>{assigned.name}</span>
+                                                    {assigned.temp ? (
+                                                        <span className="assigned-val temp">{assigned.temp}°C</span>
+                                                    ) : (
+                                                        <span className="assigned-val mac">{assigned.mac ? assigned.mac.substring(12) : 'Stock'}</span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <div className="slot-placeholder">Vacío</div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     ))}
+                </div>
+            </div>
+
+            {/* Overlay y Side Sheet para Asignación */}
+            {isSheetOpen && (
+                <div className="sheet-overlay fade-in" onClick={handleCloseSheet}></div>
+            )}
+            <div className={`assignment-sheet ${isSheetOpen ? 'open' : ''}`}>
+                <div className="sheet-header">
+                    <div className="sheet-title">
+                        <h3>Asignar Sensor</h3>
+                        <p>Espacio Físico {selectedSlot?.label}</p>
+                    </div>
+                    <button className="icon-action-btn close-sheet-btn" onClick={handleCloseSheet} title="Cerrar panel">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+                <div className="sheet-body custom-scroll">
+                    <div className="search-wrapper sheet-search">
+                        <span className="search-icon">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </span>
+                        <input 
+                            type="text" 
+                            placeholder="Buscar sensor por nombre, ID..." 
+                            value={sheetSearch}
+                            onInput={e => setSheetSearch(e.target.value)}
+                        />
+                        {sheetSearch && (
+                            <button className="clear-search-btn" onClick={() => setSheetSearch('')}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="sheet-list">
+                        <div className="sheet-section-title">Sensores Disponibles ({filteredUnassigned.length})</div>
+                        {filteredUnassigned.length > 0 ? (
+                            filteredUnassigned.map(sensor => (
+                                <div key={sensor.id} className="sensor-item sheet-sensor-item">
+                                    <div className="sensor-info">
+                                        <span className="sensor-name">{sensor.name}</span>
+                                        <span className="sensor-id">
+                                            {sensor.type === 'active' ? `ID: ${sensor.id}` : `MAC: ${sensor.mac}`}
+                                        </span>
+                                    </div>
+                                    <button className="btn-assign" onClick={() => handleAssignSensor(sensor)}>
+                                        Asignar
+                                    </button>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="empty-state">No hay sensores que coincidan con la búsqueda.</div>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

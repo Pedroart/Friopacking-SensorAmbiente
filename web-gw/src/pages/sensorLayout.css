@@ -428,3 +428,210 @@
     font-weight: 400;
     margin-top: 2px;
 }
+
+/* =========================================
+   ASIGNACIÓN SIDE SHEET (DRAWER)
+   ========================================= */
+.sheet-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: 99; /* Por debajo del sheet */
+}
+
+.assignment-sheet {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    max-width: 400px; /* Tamaño generoso para movil o desktop */
+    height: 100vh;
+    background: #1e293b;
+    box-shadow: -4px 0 15px rgba(0, 0, 0, 0.3);
+    border-left: 1px solid #334155;
+    z-index: 100;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.assignment-sheet.open {
+    transform: translateX(0);
+}
+
+.sheet-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #334155;
+    background: #0f172a;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.sheet-title h3 {
+    margin: 0 0 0.25rem 0;
+    color: #f8fafc;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.sheet-title p {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 0.85rem;
+}
+
+.close-sheet-btn {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.05);
+}
+.close-sheet-btn:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.sheet-body {
+    padding: 1.5rem;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.sheet-search {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 36px !important;
+}
+
+.sheet-search input {
+    height: 36px !important;
+    min-height: 36px !important;
+    font-size: 0.85rem;
+    border: 1px solid #334155;
+}
+
+.sheet-section-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.sheet-sensor-item {
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sheet-sensor-item:hover {
+    background: #0f172a; /* keep solid */
+    border-color: #475569;
+}
+
+.sheet-sensor-item .sensor-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-items: flex-start;
+}
+
+.sheet-sensor-item .sensor-name {
+    font-size: 0.9rem;
+    color: #f8fafc;
+}
+
+.sheet-sensor-item .sensor-id {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.btn-assign {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-assign:hover {
+    background: #2563eb;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.btn-assign:active {
+    transform: scale(0.95);
+}
+
+/* =========================================
+   ASIGNACIÓN EN SLOTS (ESPACIOS)
+   ========================================= */
+.slot-item.assigned {
+    background: rgba(14, 165, 233, 0.05);
+    border-color: #0ea5e9;
+    align-items: stretch;
+    padding: 0.2rem;
+}
+
+.slot-item.assigned:hover {
+    background: rgba(239, 68, 68, 0.05);
+    border-color: #ef4444; 
+    /* Efecto para indicar que al hacer clic se desasigna */
+}
+
+.slot-assigned-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    margin-top: 4px;
+    text-align: center;
+}
+
+.assigned-name {
+    font-size: 0.6rem; /* Aún más chico para que entre en 48px */
+    color: #e2e8f0;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    line-height: 1.1;
+}
+
+.assigned-val {
+    font-size: 0.6rem;
+    font-weight: 700;
+    margin-top: 2px;
+}
+
+.assigned-val.temp {
+    color: #38bdf8;
+}
+
+.assigned-val.mac {
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+    padding: 0.1rem 0.3rem;
+    border-radius: 4px;
+}
