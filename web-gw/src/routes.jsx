@@ -5,6 +5,7 @@ import AdminLayout from './components/layout/adminLayout.jsx'
 import CanvasLayout from './components/layout/canvasLayout.jsx'
 import Login from './pages/login.jsx'
 import ConfigNetwork from './pages/configNetwork.jsx'
+import Profile from './pages/profile.jsx'
 
 function WithLayout( {layout: Layout, children} ){
     return <Layout>{children}</Layout>
@@ -42,6 +43,11 @@ export default function Routes() {
             {/* Configuración de Red */}
             <Route path='/configuracion' component={
                 () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <ConfigNetwork/> </WithLayout>
+            } />
+
+            {/* Perfil de Usuario */}
+            <Route path='/perfil' component={
+                () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <Profile/> </WithLayout>
             } />
         </Router>
     )
