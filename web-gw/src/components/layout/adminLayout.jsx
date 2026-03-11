@@ -27,6 +27,7 @@ export default function AdminLayout({ children, title = "Overview" }) {
     const icons = {
         overview: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>,
         dashboard: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M4 13h6V5H4v8zm8 6h8V11h-8v8zM4 19h6v-4H4v4zm8-14v4h8V5h-8z"/></svg>,
+        sensor: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16z"/><circle cx="12" cy="12" r="3"/><path d="M12 7v2m0 6v2m-5-5h2m6 0h2"/></svg>,
         projects: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>,
         clients: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>,
         history: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M14 17H4v2h10v-2zm6-8H4v2h16V9zM4 15h16v-2H4v2zM4 5v2h16V5H4z"/></svg>,
@@ -60,17 +61,20 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 
                 <nav className="sidebar-nav">
                     {/* The first item "Overview" was active and had an icon, replaced by Dashboard */}
-                    <a href="/" className="nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
+                    <a href="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.dashboard} Dashboard
                     </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                    <a href="/sensores" className={`nav-item ${window.location.pathname === '/sensores' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                        {icons.sensor} Asignación de Sensores
+                    </a>
+                    <a href="/usuarios" className={`nav-item ${window.location.pathname === '/usuarios' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.users} Usuarios
                     </a>
-                    <a href="/perfil" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.profile} Cuenta
-                    </a>
-                    <a href="/configuracion" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                    <a href="/configuracion" className={`nav-item ${window.location.pathname === '/configuracion' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.settings} Configuración
+                    </a>
+                    <a href="/perfil" className={`nav-item ${window.location.pathname === '/perfil' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
+                        {icons.profile} Cuenta
                     </a>
                 </nav>
             </aside>

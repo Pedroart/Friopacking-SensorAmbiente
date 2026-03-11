@@ -6,6 +6,7 @@ import CanvasLayout from './components/layout/canvasLayout.jsx'
 import Login from './pages/login.jsx'
 import ConfigNetwork from './pages/configNetwork.jsx'
 import Profile from './pages/profile.jsx'
+import SensorLayout from './pages/sensorLayout.jsx'
 
 function WithLayout( {layout: Layout, children} ){
     return <Layout>{children}</Layout>
@@ -38,6 +39,11 @@ export default function Routes() {
             {/* Dashboard (Admin Layout) */}
             <Route path='/' component={
                 () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <DashboardPlaceholder/> </WithLayout>
+            } />
+
+            {/* Asignación de Sensores */}
+            <Route path='/sensores' component={
+                () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <SensorLayout/> </WithLayout>
             } />
 
             {/* Configuración de Red */}
