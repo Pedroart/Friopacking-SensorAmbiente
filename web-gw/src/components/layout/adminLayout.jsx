@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'preact/hooks';
+import { route } from 'preact-router';
+import Modal from '../modal.jsx';
 import StatusBadge from '../statusBadge.jsx';
 import './adminLayout.css';
 
 export default function AdminLayout({ children, title = "Overview" }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    
+    // Modal state for logout confirmation
+    const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
     // Internet connection status
     const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
@@ -22,6 +27,12 @@ export default function AdminLayout({ children, title = "Overview" }) {
     }, []);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
+    const handleLogout = () => {
+        // Here you would clear localStorage/sessionStorage if needed
+        localStorage.removeItem('user_session'); 
+        route('/login');
+    };
     
     // SVG Icons minimal versions as placeholders
     const icons = {
@@ -38,7 +49,8 @@ export default function AdminLayout({ children, title = "Overview" }) {
         menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>,
         globe: <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>,
         router: <svg viewBox="0 0 24 24"><path d="M19 13H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm12 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-2.82-8.58c.2-.21.2-.55 0-.76-1.14-1.21-3.23-2.16-5.18-2.66v-2h2c.55 0 1-.45 1-1s-.45-1-1-1h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v1h-2c-.55 0-1 .45-1 1s.45 1 1 1h2v2c-1.95.5-4.04 1.45-5.18 2.66-.2.21-.2.55 0 .76.2.2.54.21.75 0 2.61-2.71 8.24-2.73 10.86 0 .21.21.55.2.75 0z"/></svg>,
-        profile: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> 
+        profile: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>,
+        logout: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M17 16l4-4-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1"/></svg>
     };
 
     return (
@@ -60,20 +72,30 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 </a>
                 
                 <nav className="sidebar-nav">
-                    {/* The first item "Overview" was active and had an icon, replaced by Dashboard */}
                     <a href="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.dashboard} Dashboard
                     </a>
                     <a href="/sensores" className={`nav-item ${window.location.pathname === '/sensores' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.sensor} Asignación de Sensores
                     </a>
-                    {/* Removed Usuarios link as part of navigation cleanup */}
                     <a href="/configuracion" className={`nav-item ${window.location.pathname === '/configuracion' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.settings} Configuración
                     </a>
                     <a href="/perfil" className={`nav-item ${window.location.pathname === '/perfil' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.profile} Cuenta
                     </a>
+                    
+                    <div className="sidebar-spacer"></div>
+
+                    <button 
+                        className="nav-item logout-btn" 
+                        onClick={() => {
+                            setIsMobileMenuOpen(false);
+                            setIsLogoutModalOpen(true);
+                        }}
+                    >
+                        {icons.logout} Cerrar Sesión
+                    </button>
                 </nav>
             </aside>
 
@@ -98,6 +120,16 @@ export default function AdminLayout({ children, title = "Overview" }) {
             <main className="admin-content">
                 {children}
             </main>
+
+            <Modal 
+                isOpen={isLogoutModalOpen}
+                onClose={() => setIsLogoutModalOpen(false)}
+                onConfirm={handleLogout}
+                title="Cerrar Sesión"
+                message="¿Está seguro que desea cerrar su sesión actual?"
+                confirmText="Cerrar Sesión"
+                type="danger"
+            />
         </div>
     );
 }
