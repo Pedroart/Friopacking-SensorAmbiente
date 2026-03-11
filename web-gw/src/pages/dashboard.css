@@ -125,10 +125,55 @@
     min-height: 380px;
 }
 
+.chart-container-inner {
+    display: flex;
+    gap: 1.5rem;
+    flex: 1;
+    min-height: 280px;
+}
+
+.y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding-bottom: 25px; /* offset for x-axis */
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.chart-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 0.75rem;
+}
+
+.chart-wrapper svg {
+    flex: 1;
+    width: 100%;
+    overflow: visible;
+}
+
+.chart-grid-line {
+    stroke: rgba(255, 255, 255, 0.05);
+    stroke-width: 0.5;
+}
+
+.x-axis {
+    display: flex;
+    justify-content: space-between;
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0 5px;
+}
+
 .temperature-trend svg {
     flex: 1;
     width: 100%;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.15));
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.1));
 }
 
 .donut-container {

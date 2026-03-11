@@ -63,30 +63,53 @@ export default function Dashboard() {
                 <div className="chart temperature-trend">
                     <div className="chart-header">
                         <h4>Tendencia de Temperatura</h4>
-                        <span className="chart-subtitle">Últimas 24 horas</span>
+                        <span className="chart-subtitle">Lecturas de las últimas 24 horas (&deg;C)</span>
                     </div>
-                    <svg viewBox="0 0 100 50" preserveAspectRatio="none">
-                        <defs>
-                            <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
-                                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-                            </linearGradient>
-                        </defs>
-                        <path
-                            d={`M 0 50 ${tempTrend.map((v, i) => `L ${i * (100 / (tempTrend.length - 1))} ${50 - v}`).join(' ')} L 100 50 Z`}
-                            fill="url(#trendGradient)"
-                        />
-                        <polyline
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="1.5"
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                            points={tempTrend
-                                .map((v, i) => `${i * (100 / (tempTrend.length - 1))},${50 - v}`)
-                                .join(' ')}
-                        />
-                    </svg>
+                    <div className="chart-container-inner">
+                        <div className="y-axis">
+                            <span>28°</span>
+                            <span>24°</span>
+                            <span>20°</span>
+                            <span>16°</span>
+                        </div>
+                        <div className="chart-wrapper">
+                            <svg viewBox="0 -5 100 60" preserveAspectRatio="none">
+                                <defs>
+                                    <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.4" />
+                                        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                {/* Grid lines */}
+                                <line x1="0" y1="0" x2="100" y2="0" className="chart-grid-line" />
+                                <line x1="0" y1="16.6" x2="100" y2="16.6" className="chart-grid-line" />
+                                <line x1="0" y1="33.3" x2="100" y2="33.3" className="chart-grid-line" />
+                                <line x1="0" y1="50" x2="100" y2="50" className="chart-grid-line" />
+
+                                <path
+                                    d={`M 0 50 ${tempTrend.map((v, i) => `L ${i * (100 / (tempTrend.length - 1))} ${50 - (v - 15) * 4}`).join(' ')} L 100 50 Z`}
+                                    fill="url(#trendGradient)"
+                                />
+                                <polyline
+                                    fill="none"
+                                    stroke="#3b82f6"
+                                    strokeWidth="2"
+                                    strokeLinejoin="round"
+                                    strokeLinecap="round"
+                                    points={tempTrend
+                                        .map((v, i) => `${i * (100 / (tempTrend.length - 1))},${50 - (v - 15) * 4}`)
+                                        .join(' ')}
+                                />
+                            </svg>
+                            <div className="x-axis">
+                                <span>00h</span>
+                                <span>06h</span>
+                                <span>12h</span>
+                                <span>18h</span>
+                                <span>Ahora</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div className="chart sensor-status">
                     <div className="chart-header">
