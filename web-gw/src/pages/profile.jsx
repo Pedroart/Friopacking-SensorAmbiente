@@ -1,7 +1,10 @@
 import { useState } from 'preact/hooks';
+import { useSnackbar } from '../contexts/SnackbarContext';
 import './profile.css';
 
 export default function Profile() {
+    const { showSnackbar } = useSnackbar();
+    
     const [name, setName] = useState('Pedro Arteta Flores');
     const [email, setEmail] = useState('parteta@friopacking.pe');
     const [oldPassword, setOldPassword] = useState('');
@@ -10,16 +13,20 @@ export default function Profile() {
 
     const handleSaveProfile = () => {
         // TODO: Update Profile API
-        alert('Perfil actualizado con éxito');
+        showSnackbar('Perfil actualizado con éxito', 'success');
     };
 
     const handleUpdatePassword = () => {
         if (newPassword !== confirmPassword) {
-            alert('Las contraseñas no coinciden');
+            showSnackbar('Las contraseñas nuevas no coinciden', 'error');
+            return;
+        }
+        if (!oldPassword || !newPassword) {
+            showSnackbar('Debes llenar todos los campos', 'error');
             return;
         }
         // TODO: Update Password API
-        alert('Contraseña actualizada con éxito');
+        showSnackbar('Contraseña actualizada con éxito', 'success');
         setOldPassword('');
         setNewPassword('');
         setConfirmPassword('');
