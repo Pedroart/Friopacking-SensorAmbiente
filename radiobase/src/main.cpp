@@ -3,16 +3,21 @@
 #include <crypto_lib.h>
 
 QueueHandle_t dataQ = nullptr;
+SemaphoreHandle_t slotsMutex = nullptr;
 
+#pragma pack(push,1)
 struct SlotState
 {
-    bool used = false;
+    // ---- MISMO LAYOUT QUE BeaconPayload ----
+    uint8_t version_id = 0;
     uint8_t device_id = 0;
-    
+    uint8_t flags = 0;
     int16_t tmp_x100 = 0;
     int16_t cpu_x100 = 0;
-    uint8_t bat_pct = 0;
-    uint8_t flags = 0;
+    int8_t bat_pct = 0;
+
+    // ---- DATOS LOCALES ----
+    bool used = false;
 
     int8_t rssi_read = 0;
     int8_t rssi_send = 0;
@@ -20,24 +25,25 @@ struct SlotState
     uint8_t addr[6] = {0};
 
     uint32_t last_seen_ms = 0;
-    
 };
-
-static SlotState slots[32];
-
-// Version 1 ////////////
+#pragma pack(pop)
 
 #pragma pack(push, 1)
 struct BeaconPayload
 {
-    uint8_t version_id = 1;
-    uint8_t device_id = 0;
-    uint8_t flags = 0;
-    int16_t TMP117_tem_x100 = 0;
-    int16_t CPU_tem_x100 = 0;
-    int8_t BAT_x100 = 0;
+  // HEAD
+  int16_t company = 0xF510; // Friopacking S.L.
+  // BODY
+  uint8_t version_id = 1;
+  uint8_t device_id = 0;
+  uint8_t flags = 0;
+  int16_t TMP117_tem_x100 = 0;
+  int16_t CPU_tem_x100 = 0;
+  int8_t BAT_x100 = 0;
 };
 #pragma pack(pop)
+
+static SlotState slots[32];
 
 struct Flags
 {
@@ -49,38 +55,31 @@ struct Flags
 Flags decodeFlags(uint8_t rawFlags)
 {
     Flags f;
-    f.i2c_fail = rawFlags & (1 << 0);
-    f.bat_low = rawFlags & (1 << 1);
-    f.tmp_fail = rawFlags & (1 << 2);
+    f.i2c_fail = (rawFlags & (1 << 0)) != 0;
+    f.bat_low  = (rawFlags & (1 << 1)) != 0;
+    f.tmp_fail = (rawFlags & (1 << 2)) != 0;
     return f;
 }
-
-///////////////////////////
 
 static const uint8_t KEY[16] = {
     0xA3, 0x7F, 0x1C, 0xD9, 0x88, 0x4E, 0x21, 0xB6,
     0x59, 0x02, 0xEF, 0xC4, 0x6A, 0x90, 0x13, 0xDD};
 
-static void updateSlotFromBeacon(SlotState &s, const BeaconPayload &p, const AdvRaw &m)
+static void updateSlotFromPlain(SlotState &s, const uint8_t plain[16], const AdvRaw &m)
 {
+    // copiar directamente el payload del beacon (8 bytes)
+    memcpy(&s.version_id, plain, sizeof(BeaconPayload));
+
     s.used = true;
-    s.device_id = p.device_id;
 
-    s.tmp_x100 = p.TMP117_tem_x100;
-    s.cpu_x100 = p.CPU_tem_x100;
-    s.bat_pct = (uint8_t)p.BAT_x100;
-    s.flags = p.flags;
-
+    // metadata local
     s.rssi_read = m.rssi_read;
     s.rssi_send = m.rssi_send;
-
     memcpy(s.addr, m.addr, 6);
-
     s.last_seen_ms = millis();
 }
 
 void advProcessTask(void *pvParameters)
-// TODO - Liberar Memoria
 {
     (void)pvParameters;
     AdvRaw m;
@@ -123,31 +122,33 @@ void advProcessTask(void *pvParameters)
             }
             Serial.println();
 
-            BeaconPayload p;
-            memcpy(&p, plain, sizeof(BeaconPayload));
-            
-            Flags fl = decodeFlags(p.flags);
+            uint8_t device_id = plain[1];
+            if (device_id >= 32)
+            {
+                Serial.printf("WARN: device_id fuera de rango: %u\n", device_id);
+                continue;
+            }
+
+            SlotState &s = slots[device_id];
+            updateSlotFromPlain(s, plain, m);
+
+            Flags fl = decodeFlags(s.flags);
 
             Serial.println("---- Beacon Decodificado ----");
-            Serial.printf("version_id      : %u\n", p.version_id);
-            Serial.printf("device_id       : %u\n", p.device_id);
-            Serial.printf("flags raw       : 0x%02X\n", p.flags);
-            Serial.printf("TMP117 temp     : %.2f C\n", p.TMP117_tem_x100 / 100.0f);
-            Serial.printf("CPU temp        : %.2f C\n", p.CPU_tem_x100 / 100.0f);
-            Serial.printf("BAT raw         : %d\n", p.BAT_x100);
+            Serial.printf("version_id      : %u\n", s.version_id);
+            Serial.printf("device_id       : %u\n", s.device_id);
+            Serial.printf("flags raw       : 0x%02X\n", s.flags);
+            Serial.printf("TMP117 temp     : %.2f C\n", s.tmp_x100 / 100.0f);
+            Serial.printf("CPU temp        : %.2f C\n", s.cpu_x100 / 100.0f);
+            Serial.printf("BAT raw         : %d\n", s.bat_pct);
 
             Serial.println("Flags:");
             Serial.printf("  i2c_fail      : %s\n", fl.i2c_fail ? "true" : "false");
             Serial.printf("  bat_low       : %s\n", fl.bat_low ? "true" : "false");
             Serial.printf("  tmp_fail      : %s\n", fl.tmp_fail ? "true" : "false");
+
+            Serial.printf("SLOT[%u] actualizado\n", s.device_id);
             Serial.println("-----------------------------");
-
-            if (p.device_id < 32)
-            {
-                updateSlotFromBeacon(slots[p.device_id], p, m);
-
-                Serial.printf("SLOT[%u] actualizado\n", p.device_id);
-            }
         }
     }
 }
@@ -171,12 +172,11 @@ void setup()
     xTaskCreatePinnedToCore(
         advProcessTask,
         "advProcessTask",
-        4096,           // Memoria asignada
-        nullptr,        // Ningun parametro
-        2,              // Prioridad
-        &advTaskHandle, // El puntero de control
-        1               // La CPU donde se realiza
-    );
+        4096,
+        nullptr,
+        2,
+        &advTaskHandle,
+        1);
 }
 
 void loop()
