@@ -70,14 +70,21 @@ export default function ConfigNetwork() {
                     <span className="net-mode-label">
                         Modo: <strong>{current.dhcp ? 'DHCP (Automático)' : 'Manual'}</strong>
                     </span>
-                    <label className="toggle-switch">
-                        <input
-                            type="checkbox"
-                            checked={current.dhcp}
-                            onChange={e => updateField('dhcp', e.target.checked)}
-                        />
-                        <span className="toggle-slider" />
-                    </label>
+                    <div 
+                        className={`custom-toggle ${current.dhcp ? 'checked' : ''}`}
+                        onClick={() => updateField('dhcp', !current.dhcp)}
+                        role="switch"
+                        aria-checked={current.dhcp}
+                        tabIndex={0}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                updateField('dhcp', !current.dhcp);
+                            }
+                        }}
+                    >
+                        <div className="toggle-knob" />
+                    </div>
                 </div>
 
                 {/* IP fields */}

@@ -58,8 +58,8 @@
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 10px;
-    padding: 1rem;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
     animation: netCardIn 0.25s ease;
 }
 
@@ -73,8 +73,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 0.9rem;
-    padding-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
@@ -89,62 +89,55 @@
     font-weight: 600;
 }
 
-/* Custom toggle switch */
-.toggle-switch {
+/* Custom div toggle switch */
+.custom-toggle {
+    width: 36px;
+    height: 20px;
+    background: #334155;
+    border-radius: 20px;
     position: relative;
-    width: 34px;
-    height: 18px;
+    cursor: pointer;
+    transition: background 0.25s ease;
     flex-shrink: 0;
 }
 
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-    position: absolute;
-}
-
-.toggle-slider {
-    position: absolute;
-    inset: 0;
-    background: #334155;
-    border-radius: 18px;
-    cursor: pointer;
-    transition: background 0.25s ease;
-}
-
-.toggle-slider::before {
-    content: '';
-    position: absolute;
-    left: 2px;
-    top: 2px;
-    width: 14px;
-    height: 14px;
-    background: #94a3b8;
-    border-radius: 50%;
-    transition: all 0.25s ease;
-}
-
-.toggle-switch input:checked + .toggle-slider {
+.custom-toggle.checked {
     background: #3b82f6;
 }
 
-.toggle-switch input:checked + .toggle-slider::before {
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    background: #94a3b8;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.custom-toggle.checked .toggle-knob {
     transform: translateX(16px);
     background: #f8fafc;
+}
+
+.custom-toggle:focus-visible {
+    outline: 2px solid #60a5fa;
+    outline-offset: 2px;
 }
 
 /* ── Form Fields ── */
 .net-fields {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.35rem;
 }
 
 .net-field {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.1rem;
 }
 
 .net-field label {
@@ -157,10 +150,10 @@
 
 .net-field input {
     width: 100%;
-    height: 32px;
-    padding: 0 0.6rem;
+    height: 24px;
+    padding: 0 0.5rem;
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 6px;
+    border-radius: 4px;
     background: rgba(15, 23, 42, 0.5);
     color: #e2e8f0;
     font-size: 0.78rem;
@@ -185,19 +178,20 @@
 .net-actions {
     display: flex;
     gap: 0.5rem;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
     justify-content: flex-end;
 }
 
 .net-actions button {
-    padding: 0.4rem 1rem;
-    border-radius: 6px;
+    padding: 0.3rem 0.75rem;
+    border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
     font-family: inherit;
+    line-height: 1;
 }
 
 .btn-save {
