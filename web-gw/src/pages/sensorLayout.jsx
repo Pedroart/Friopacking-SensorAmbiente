@@ -59,17 +59,23 @@ export default function SensorLayout() {
             e.preventDefault();
             return;
         }
+        e.currentTarget.classList.add('dragging');
         const data = JSON.stringify(payload);
-        // set both types for cross-browser compatibility
-        e.dataTransfer.setData('application/json', data);
+        try {
+            e.dataTransfer.setData('application/json', data);
+        } catch (err) {
+            // Fallback for older browsers or restricted environments
+        }
         e.dataTransfer.setData('text/plain', data);
-        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.effectAllowed = 'all';
     };
+
 
     const handleDragOver = e => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
+        e.dataTransfer.dropEffect = 'copy';
     };
+
 
     const handleDrop = (e, targetSlot) => {
         e.preventDefault();
@@ -236,10 +242,13 @@ export default function SensorLayout() {
                     </div>
                     <div className="sensor-list">
                         {filteredActive.map(sensor => (
-                            <div key={sensor.id} className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} draggable onDragStart={e => {
-                                        e.dataTransfer.setData('application/json', JSON.stringify({ source: 'list', sensor }));
-                                        e.dataTransfer.effectAllowed = 'copy';
-                                    }}>
+                            <div key={sensor.id} 
+                                className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} 
+                                draggable 
+                                onDragStart={e => handleDragStart(e, { source: 'list', sensor })}
+                                onDragEnd={handleDragEnd}
+                            >
+
                                 <div className="sensor-info">
                                     <span className="sensor-name">{sensor.name}</span>
                                     <span className="sensor-id">ID: {sensor.id}</span>
@@ -282,10 +291,13 @@ export default function SensorLayout() {
                     </div>
                     <div className="sensor-list">
                         {filteredAvailable.map(sensor => (
-                            <div key={sensor.id} className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} draggable onDragStart={e => {
-                                    e.dataTransfer.setData('application/json', JSON.stringify({ source: 'list', sensor }));
-                                    e.dataTransfer.effectAllowed = 'copy';
-                                }}>
+                            <div key={sensor.id} 
+                                className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} 
+                                draggable 
+                                onDragStart={e => handleDragStart(e, { source: 'list', sensor })}
+                                onDragEnd={handleDragEnd}
+                            >
+
                                 <div className="sensor-info">
                                     <span className="sensor-name">{sensor.name}</span>
                                     <span className="sensor-id">ID: {sensor.id}</span>

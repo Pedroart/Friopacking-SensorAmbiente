@@ -314,9 +314,13 @@
     border-color: #3b82f6;
     background: rgba(59, 130, 246, 0.1);
 }
-.slot-item.assigned.dragging {
-    opacity: 0.6;
+.slot-item.assigned.dragging, 
+.sensor-item.dragging {
+    opacity: 0.5;
+    background: rgba(14, 165, 233, 0.1);
+    border: 1px dashed #3b82f6;
 }
+
 
 .sensor-item {
     display: flex;
