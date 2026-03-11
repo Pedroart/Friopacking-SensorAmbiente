@@ -326,18 +326,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.4rem 0.5rem; /* Súper ajustado para max densidad */
-    margin-bottom: 0.2rem; 
-    border-radius: 4px;
-    background: transparent;
-    border-bottom: 1px solid rgba(51, 65, 85, 0.3); /* Solo línea divisoria ínfima */
-    transition: all 0.1s ease;
+    padding: 0.5rem 0.6rem; 
+    margin-bottom: 0.3rem; 
+    border-radius: 6px;
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.2);
+    transition: all 0.15s ease;
     cursor: pointer;
 }
 
 .sensor-item:hover {
-    background: rgba(255, 255, 255, 0.05); /* Efecto hover tenue */
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(59, 130, 246, 0.3);
 }
+
 
 .assigned-in-list {
     opacity: 0.7;
@@ -376,7 +378,7 @@
     display: flex;
     flex-direction: row; 
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem; /* More gap */
     flex: 1;
     min-width: 0;
     white-space: nowrap;
@@ -384,21 +386,31 @@
 }
 
 
+
 .sensor-name {
     font-weight: 500;
     color: #e2e8f0;
-    font-size: 0.8rem; /* Letra pequeña, nada invasiva */
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 140px; /* Fixed width */
+    min-width: 140px;
+}
+
+
+.sensor-id, .sensor-mac {
+    font-size: 0.65rem;
+    color: #64748b;
+    font-family: inherit; 
+    opacity: 0.8;
+    width: 65px; /* Fixed width */
+    min-width: 65px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.sensor-id, .sensor-mac {
-    font-size: 0.65rem; /* Diminuto para info secundaria */
-    color: #64748b;
-    font-family: inherit; 
-    opacity: 0.8;
-}
 
 .sensor-value {
     background: rgba(14, 165, 233, 0.1); /* Color flat no gradiante */
@@ -484,10 +496,11 @@
     padding: 1.5rem;
     overflow-y: auto;
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* tight grid for up to 40 slots */
-    gap: 0.5rem; /* minimal spacing between slots */
+    grid-template-columns: repeat(8, 1fr); /* 8 slots per row as requested */
+    gap: 0.75rem; /* slightly more gap for the larger boxes */
     align-content: flex-start;
 }
+
 
 /* legacy group styles no longer used, kept for reference */
 .slot-group {
@@ -527,20 +540,21 @@
 
 .slot-item {
     background: #0f172a; 
-    border: 1px solid #334155; /* Solid no dashed, mas sobrio */
-    border-radius: 4px; 
-    padding: 0.25rem; 
+    border: 1px solid #334155; 
+    border-radius: 6px; 
+    padding: 0.4rem; 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 48px; /* Increiblemente chico (era 65px) */
-    transition: all 0.1s ease;
+    height: 72px; /* Increased from 48px for better visibility */
+    transition: all 0.15s ease;
     position: relative;
     cursor: pointer;
-    min-width: 0; /* Impide que desborde el grid si el contenido es mas grande */
-    overflow: hidden; /* Asegura que el contenido extra no salga del borde */
+    min-width: 0; 
+    overflow: hidden; 
 }
+
 
 .slot-item:hover {
     border-color: #3b82f6; 
@@ -552,12 +566,13 @@
 
 .slot-number {
     position: absolute;
-    top: 2px; /* Ajustado para dar más espacio */
-    left: 4px;
-    font-size: 0.55rem;
-    color: #475569; /* Numero muy disimulado */
-    font-weight: 600;
+    top: 4px; 
+    left: 6px;
+    font-size: 0.65rem;
+    color: #64748b; 
+    font-weight: 700;
 }
+
 
 .slot-placeholder {
     color: #475569; 
@@ -741,24 +756,26 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    margin-top: 6px; /* Más abajo para no chocar con el número */
+    margin-top: 8px; 
     text-align: center;
     width: 100%;
     min-width: 0;
 }
 
+
 .assigned-name {
-    font-size: 0.55rem; /* Aún más chico para que entre en 48px */
+    font-size: 0.65rem; 
     color: #e2e8f0;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 100%; /* Toma todo el ancho disponible truncando lo que no cabe */
-    line-height: 1.1;
-    padding: 0 2px; /* Margen ligero a los lados */
+    width: 100%; 
+    line-height: 1.2;
+    padding: 0 4px; 
     box-sizing: border-box;
 }
+
 
 .assigned-val {
     font-size: 0.6rem;
@@ -777,3 +794,34 @@
     border-radius: 4px;
     font-size: 0.55rem;
 }
+
+.unassign-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.1);
+    border: none;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 5;
+    padding: 0;
+}
+
+.slot-item:hover .unassign-btn {
+    opacity: 1;
+}
+
+.unassign-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+

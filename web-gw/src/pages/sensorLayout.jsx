@@ -158,12 +158,7 @@ export default function SensorLayout() {
     const handleSlotClick = (slot) => {
         const assigned = assignedSlots[slot.id];
         if (assigned) {
-            // active sensors should remain assigned
-            if (assigned.type === 'active' || assigned.temp != null) {
-                alert('Este sensor activo no puede desasignarse manualmente.');
-                return;
-            }
-            const confirmRemove = window.confirm(`¿Desea desasignar el sensor de ${slot.label}?`);
+            const confirmRemove = window.confirm(`¿Desea desasignar "${assigned.name}" de este espacio?`);
             if (confirmRemove) {
                 const newAssigned = { ...assignedSlots };
                 delete newAssigned[slot.id];
@@ -175,6 +170,7 @@ export default function SensorLayout() {
             setSheetSearch('');
         }
     };
+
 
     const handleAssignSensor = (sensor) => {
         if (!selectedSlot) return;
@@ -349,17 +345,23 @@ export default function SensorLayout() {
                             >
                                 <div className="slot-number">{slot.label}</div>
                                 {assigned ? (
-                                    <div className="slot-assigned-info">
-                                        <span className="assigned-name" title={assigned.name}>{assigned.name}</span>
-                                        {assigned.temp ? (
-                                            <span className="assigned-val temp">{assigned.temp}°C</span>
-                                        ) : (
-                                            <span className="assigned-val mac">{assigned.mac ? assigned.mac.substring(12) : 'Stock'}</span>
-                                        )}
-                                    </div>
+                                    <>
+                                        <button className="unassign-btn" onClick={(e) => { e.stopPropagation(); handleSlotClick(slot); }} title="Desasignar sensor">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        </button>
+                                        <div className="slot-assigned-info">
+                                            <span className="assigned-name" title={assigned.name}>{assigned.name}</span>
+                                            {assigned.temp ? (
+                                                <span className="assigned-val temp">{assigned.temp}°C</span>
+                                            ) : (
+                                                <span className="assigned-val mac">{assigned.mac ? assigned.mac.substring(12) : 'Stock'}</span>
+                                            )}
+                                        </div>
+                                    </>
                                 ) : (
                                     <div className="slot-placeholder">Vacío</div>
                                 )}
+
                             </div>
                         );
                     })}
