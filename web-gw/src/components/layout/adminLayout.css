@@ -157,6 +157,51 @@
     margin: 0;
 }
 
+/* Topbar Right Group */
+.topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.topbar-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+/* Status Badge Dots */
+.status-badge {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    cursor: help;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.status-badge.online {
+    background-color: #22c55e;
+    box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+    animation: pulse-green 2s ease-in-out infinite;
+}
+
+.status-badge.offline {
+    background-color: #ef4444;
+    box-shadow: 0 0 6px rgba(239, 68, 68, 0.5);
+    animation: pulse-red 2s ease-in-out infinite;
+}
+
+@keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 4px rgba(34, 197, 94, 0.4); }
+    50%      { box-shadow: 0 0 10px rgba(34, 197, 94, 0.7); }
+}
+
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 4px rgba(239, 68, 68, 0.4); }
+    50%      { box-shadow: 0 0 10px rgba(239, 68, 68, 0.7); }
+}
+
 /* Main Content Area */
 .admin-content {
     grid-column: 2 / 3;

@@ -1,8 +1,25 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
+import StatusBadge from '../statusBadge.jsx';
 import './adminLayout.css';
 
 export default function AdminLayout({ children, title = "Overview" }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Internet connection status
+    const [isOnline, setIsOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+    // Device connection status (placeholder for WebSocket/API)
+    const [isDeviceConnected] = useState(false);
+
+    useEffect(() => {
+        const goOnline = () => setIsOnline(true);
+        const goOffline = () => setIsOnline(false);
+        window.addEventListener('online', goOnline);
+        window.addEventListener('offline', goOffline);
+        return () => {
+            window.removeEventListener('online', goOnline);
+            window.removeEventListener('offline', goOffline);
+        };
+    }, []);
 
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
     
@@ -16,6 +33,7 @@ export default function AdminLayout({ children, title = "Overview" }) {
         exceptions: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>,
         reports: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>,
         users: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>,
+        settings: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.61 3.61 0 0112 15.6z"/></svg>,
         menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
     };
 
@@ -62,6 +80,9 @@ export default function AdminLayout({ children, title = "Overview" }) {
                     <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.users} Usuarios
                     </a>
+                    <a href="/configuracion" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                        {icons.settings} Configuración
+                    </a>
                 </nav>
             </aside>
 
@@ -72,7 +93,13 @@ export default function AdminLayout({ children, title = "Overview" }) {
                     </button>
                     <h2 className="topbar-title">{title}</h2>
                 </div>
-                <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
+                <div className="topbar-right">
+                    <div className="topbar-badges">
+                        <StatusBadge online={isOnline} label={isOnline ? 'Internet conectado' : 'Sin Internet'} />
+                        <StatusBadge online={isDeviceConnected} label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} />
+                    </div>
+                    <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
+                </div>
             </header>
 
             <main className="admin-content">

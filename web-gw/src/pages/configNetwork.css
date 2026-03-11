@@ -1,0 +1,239 @@
+/* configNetwork.css — Premium compact network configuration styles */
+
+.config-network {
+    max-width: 600px;
+    margin: 0 auto;
+    color: #e2e8f0;
+}
+
+.config-network h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0 0 1.25rem 0;
+    letter-spacing: -0.01em;
+}
+
+/* ── Tab Pills ── */
+.net-tabs {
+    display: flex;
+    gap: 0.35rem;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(255,255,255,0.06);
+}
+
+.net-tab {
+    flex: 1;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: center;
+    font-family: inherit;
+    letter-spacing: 0.01em;
+}
+
+.net-tab:hover {
+    color: #cbd5e1;
+    background: rgba(255,255,255,0.04);
+}
+
+.net-tab.active {
+    background: rgba(59, 130, 246, 0.18);
+    color: #60a5fa;
+    box-shadow: 0 1px 6px rgba(59,130,246,0.12);
+}
+
+/* ── Form Card ── */
+.net-card {
+    background: rgba(30, 41, 59, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 12px;
+    padding: 1.25rem;
+    animation: netCardIn 0.25s ease;
+}
+
+@keyframes netCardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── DHCP / Manual Toggle Row ── */
+.net-mode-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.1rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.net-mode-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.net-mode-label strong {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+/* Custom toggle switch */
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #334155;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: background 0.25s ease;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background: #94a3b8;
+    border-radius: 50%;
+    transition: all 0.25s ease;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: #3b82f6;
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(18px);
+    background: #f8fafc;
+}
+
+/* ── Form Fields ── */
+.net-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.net-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.net-field label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.net-field input {
+    width: 100%;
+    height: 36px;
+    padding: 0 0.75rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.5);
+    color: #e2e8f0;
+    font-size: 0.85rem;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    transition: all 0.2s ease;
+    outline: none;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.net-field input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.12);
+}
+
+.net-field input:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ── Actions ── */
+.net-actions {
+    display: flex;
+    gap: 0.65rem;
+    margin-top: 1.25rem;
+    justify-content: flex-end;
+}
+
+.net-actions button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: inherit;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+}
+
+.btn-save:hover {
+    box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+    transform: translateY(-1px);
+}
+
+.btn-cancel {
+    background: rgba(255,255,255,0.06);
+    color: #94a3b8;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.1);
+    color: #e2e8f0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+    .net-card {
+        padding: 1rem;
+    }
+
+    .net-actions {
+        flex-direction: column;
+    }
+
+    .net-actions button {
+        width: 100%;
+        text-align: center;
+    }
+}

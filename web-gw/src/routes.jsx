@@ -3,7 +3,8 @@ import { useEffect } from 'preact/hooks'
 
 import AdminLayout from './components/layout/adminLayout.jsx'
 import CanvasLayout from './components/layout/canvasLayout.jsx'
-import Login from './pages/login.jsx' 
+import Login from './pages/login.jsx'
+import ConfigNetwork from './pages/configNetwork.jsx'
 
 function WithLayout( {layout: Layout, children} ){
     return <Layout>{children}</Layout>
@@ -36,6 +37,11 @@ export default function Routes() {
             {/* Dashboard (Admin Layout) */}
             <Route path='/' component={
                 () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <DashboardPlaceholder/> </WithLayout>
+            } />
+
+            {/* Configuración de Red */}
+            <Route path='/configuracion' component={
+                () => <WithLayout layout={AdminLayout} > <ScrollToTop/> <ConfigNetwork/> </WithLayout>
             } />
         </Router>
     )
