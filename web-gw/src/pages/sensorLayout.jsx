@@ -17,6 +17,8 @@ const mockAvailableSensors = Array.from({ length: 25 }, (_, i) => ({
 export default function SensorLayout() {
     const [searchActive, setSearchActive] = useState('');
     const [searchAvailable, setSearchAvailable] = useState('');
+    const [showSearchActive, setShowSearchActive] = useState(false);
+    const [showSearchAvailable, setShowSearchAvailable] = useState(false);
 
     const filteredActive = mockActiveSensors.filter(s => 
         s.name.toLowerCase().includes(searchActive.toLowerCase()) || 
@@ -47,18 +49,30 @@ export default function SensorLayout() {
             <div className="sensor-sidebar">
                 {/* Caja Superior: Sensores Activos */}
                 <div className="sensor-box">
-                    <div className="sensor-box-header">
+                    <div className="sensor-box-header inline-header">
                         <h3>Sensores Activos</h3>
-                        <div className="search-wrapper">
-                            <span className="search-icon">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            </span>
-                            <input 
-                                type="text" 
-                                placeholder="Buscar sensor o código..." 
-                                value={searchActive}
-                                onInput={e => setSearchActive(e.target.value)}
-                            />
+                        <div className="header-actions">
+                            {showSearchActive || searchActive ? (
+                                <div className="search-wrapper compact">
+                                    <span className="search-icon">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Buscar..." 
+                                        value={searchActive}
+                                        onInput={e => setSearchActive(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button className="clear-search-btn" title="Cerrar búsqueda" onClick={() => { setSearchActive(''); setShowSearchActive(false); }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
+                                </div>
+                            ) : (
+                                <button className="icon-action-btn" title="Buscar sensor" onClick={() => setShowSearchActive(true)}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className="sensor-list">
@@ -77,18 +91,30 @@ export default function SensorLayout() {
 
                 {/* Caja Inferior: Sensores Disponibles */}
                 <div className="sensor-box">
-                    <div className="sensor-box-header">
+                    <div className="sensor-box-header inline-header">
                         <h3>Sensores Disponibles</h3>
-                        <div className="search-wrapper">
-                            <span className="search-icon">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                            </span>
-                            <input 
-                                type="text" 
-                                placeholder="Buscar disponible por MAC..." 
-                                value={searchAvailable}
-                                onInput={e => setSearchAvailable(e.target.value)}
-                            />
+                        <div className="header-actions">
+                            {showSearchAvailable || searchAvailable ? (
+                                <div className="search-wrapper compact">
+                                    <span className="search-icon">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    </span>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Buscar..." 
+                                        value={searchAvailable}
+                                        onInput={e => setSearchAvailable(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button className="clear-search-btn" title="Cerrar búsqueda" onClick={() => { setSearchAvailable(''); setShowSearchAvailable(false); }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
+                                </div>
+                            ) : (
+                                <button className="icon-action-btn" title="Buscar sensor" onClick={() => setShowSearchAvailable(true)}>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                </button>
+                            )}
                         </div>
                     </div>
                     <div className="sensor-list">
@@ -111,9 +137,8 @@ export default function SensorLayout() {
 
             {/* Panel Principal Derecho: Espacios Físicos (Plantillas) */}
             <div className="sensor-main-area">
-                <div className="slots-header">
+                <div className="slots-header compact-header">
                     <h2>Asignación a Espacios Físicos</h2>
-                    <p>Visualice y asigne sensores a ubicaciones físicas agrupadas en plantillas (Límite dinámico 40 unidades).</p>
                 </div>
                 
                 <div className="slots-container custom-scroll">
