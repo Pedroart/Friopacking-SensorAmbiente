@@ -56,26 +56,9 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 </div>
                 
                 <nav className="sidebar-nav">
+                    {/* The first item "Overview" was active and had an icon, replaced by Dashboard */}
                     <a href="/" className="nav-item active" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.overview} Overview
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.dashboard} Dashboard
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.projects} Proyectos
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.clients} Clientes
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.history} Historial
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.exceptions} Excepciones
-                    </a>
-                    <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.reports} Reportes
                     </a>
                     <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.users} Usuarios
