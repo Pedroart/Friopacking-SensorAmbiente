@@ -34,7 +34,10 @@ export default function AdminLayout({ children, title = "Overview" }) {
         reports: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>,
         users: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>,
         settings: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 00-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1115.6 12 3.61 3.61 0 0112 15.6z"/></svg>,
-        menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>,
+        globe: <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>,
+        router: <svg viewBox="0 0 24 24"><path d="M19 13H5c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4c0-1.1-.9-2-2-2zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm12 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm-2.82-8.58c.2-.21.2-.55 0-.76-1.14-1.21-3.23-2.16-5.18-2.66v-2h2c.55 0 1-.45 1-1s-.45-1-1-1h-2V2c0-.55-.45-1-1-1s-1 .45-1 1v1h-2c-.55 0-1 .45-1 1s.45 1 1 1h2v2c-1.95.5-4.04 1.45-5.18 2.66-.2.21-.2.55 0 .76.2.2.54.21.75 0 2.61-2.71 8.24-2.73 10.86 0 .21.21.55.2.75 0z"/></svg>,
+        profile: <svg className="nav-icon" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> 
     };
 
     return (
@@ -47,13 +50,13 @@ export default function AdminLayout({ children, title = "Overview" }) {
             ></div>
 
             <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-                <div className="sidebar-header">
+                <a href="/perfil" className="sidebar-header" style={{textDecoration: 'none', color: 'inherit'}}>
                     <div className="avatar-initials">PA</div>
                     <div className="user-info">
                         <span className="user-name">Pedro Arteta Flores</span>
                         <span className="user-email">parteta@friopacking.pe</span>
                     </div>
-                </div>
+                </a>
                 
                 <nav className="sidebar-nav">
                     {/* The first item "Overview" was active and had an icon, replaced by Dashboard */}
@@ -62,6 +65,9 @@ export default function AdminLayout({ children, title = "Overview" }) {
                     </a>
                     <a href="/" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.users} Usuarios
+                    </a>
+                    <a href="/perfil" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
+                        {icons.profile} Cuenta
                     </a>
                     <a href="/configuracion" className="nav-item" onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.settings} Configuración
@@ -78,10 +84,12 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 </div>
                 <div className="topbar-right">
                     <div className="topbar-badges">
-                        <StatusBadge online={isOnline} label={isOnline ? 'Internet conectado' : 'Sin Internet'} />
-                        <StatusBadge online={isDeviceConnected} label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} />
+                        <StatusBadge online={isOnline} label={isOnline ? 'Internet conectado' : 'Sin Internet'} icon={icons.globe} />
+                        <StatusBadge online={isDeviceConnected} label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} icon={icons.router} />
                     </div>
-                    <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
+                    <a href="/perfil" style={{textDecoration: 'none', color: 'inherit'}}>
+                        <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
+                    </a>
                 </div>
             </header>
 
