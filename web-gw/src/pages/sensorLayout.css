@@ -215,6 +215,109 @@
     background: #64748b; 
 }
 
+/* Header controls for slots */
+.slots-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem;
+}
+
+.slots-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.add-slot-btn {
+    background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+    color: #f8fafc;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.15);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.add-slot-btn:hover {
+
+    background: linear-gradient(135deg, #2563eb 0%, #6366f1 100%);
+    box-shadow: 0 4px 16px rgba(59,130,246,0.22);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.add-slot-btn:disabled {
+    background: #334155;
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.remove-slot-btn {
+    background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+    color: #f8fafc;
+    border: none;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(239,68,68,0.15);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.remove-slot-btn:hover {
+
+    background: linear-gradient(135deg, #dc2626 0%, #f87171 100%);
+    box-shadow: 0 4px 16px rgba(239,68,68,0.22);
+    transform: translateY(-2px) scale(1.04);
+}
+.remove-slot-btn:disabled {
+    background: #334155;
+    color: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.slot-legend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.legend-item {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    border: 1px solid #64748b;
+    margin-right: 0.25rem;
+}
+
+.legend-item.occupied { background: #10b981; }
+.legend-item.empty { background: transparent; }
+
+.slot-item.drag-over {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.1);
+}
+.slot-item.assigned.dragging {
+    opacity: 0.6;
+}
+
 .sensor-item {
     display: flex;
     justify-content: space-between;
@@ -232,19 +335,50 @@
     background: rgba(255, 255, 255, 0.05); /* Efecto hover tenue */
 }
 
+.assigned-in-list {
+    opacity: 0.7;
+}
+
+.assigned-badge {
+    background: linear-gradient(135deg, #10b981 0%, #38bdf8 100%);
+    color: #f8fafc;
+    font-size: 0.7rem;
+    padding: 0.13rem 0.45rem;
+    border-radius: 6px;
+    margin-left: 0.5rem;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(16,185,129,0.12);
+    border: 1px solid rgba(56,189,248,0.18);
+    letter-spacing: 0.03em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    animation: badgePop 0.3s;
+}
+
+@keyframes badgePop {
+    0% { transform: scale(0.7); opacity: 0.5; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 .sensor-item:last-child {
     margin-bottom: 0;
     border-bottom: none;
 }
 
+
 .sensor-info {
     display: flex;
-    flex-direction: row; /* Horizontal para salvar alto */
+    flex-direction: row; 
     align-items: center;
     gap: 0.5rem;
     flex: 1;
     min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
 }
+
 
 .sensor-name {
     font-weight: 500;
@@ -324,8 +458,9 @@
 }
 
 .slots-header.compact-header {
-    padding: 1rem 1.5rem; /* Achicado drásticamente */
+    padding: 0.75rem 1.25rem; /* Achicado drásticamente */
     border-bottom: 1px solid #1e293b;
+
     background: #1e293b; 
     display: flex;
     align-items: center;
@@ -345,19 +480,14 @@
     padding: 1.5rem;
     overflow-y: auto;
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); /* Permitir grid mas denso */
-    gap: 1.25rem; /* Poco hueco entre plantillas */
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); /* tight grid for up to 40 slots */
+    gap: 0.5rem; /* minimal spacing between slots */
     align-content: flex-start;
 }
 
-/* Plantilla individual */
+/* legacy group styles no longer used, kept for reference */
 .slot-group {
-    background: #1e293b; /* Vuelve a color mate solido */
-    border-radius: 6px;
-    padding: 1rem; /* Menor padding de la caja de template */
-    border: 1px solid #334155;
-    box-shadow: none; /* Adiós sombras invasivas */
-    transition: none; /* No hover translations en la plantilla en si */
+    display: none;
 }
 
 .group-title-wrapper {

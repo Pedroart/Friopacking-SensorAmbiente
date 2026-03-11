@@ -5,13 +5,15 @@ import './sensorLayout.css';
 const mockActiveSensors = Array.from({ length: 15 }, (_, i) => ({ 
     id: `A-${String(i+1).padStart(2, '0')}`, 
     name: `Sensor Ambiente ${i+1}`, 
-    temp: (Math.random() * 5 + 20).toFixed(1) 
+    temp: (Math.random() * 5 + 20).toFixed(1),
+    type: 'active'
 }));
 
 const mockAvailableSensors = Array.from({ length: 25 }, (_, i) => ({ 
     id: `D-${String(i+1).padStart(2, '0')}`, 
     name: `Módulo Friopacking ${i+1}`, 
-    mac: `00:1A:2B:3C:4D:${(i+10).toString(16).toUpperCase()}` 
+    mac: `00:1A:2B:3C:4D:${(i+10).toString(16).toUpperCase()}` ,
+    type: 'available'
 }));
 
 export default function SensorLayout() {
@@ -20,17 +22,125 @@ export default function SensorLayout() {
     const [showSearchActive, setShowSearchActive] = useState(false);
     const [showSearchAvailable, setShowSearchAvailable] = useState(false);
 
-    const [assignedSlots, setAssignedSlots] = useState({});
     const [selectedSlot, setSelectedSlot] = useState(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [sheetSearch, setSheetSearch] = useState('');
 
+    // total number of physical slots per tunnel (max 40)
+    const [totalSlots, setTotalSlots] = useState(16);
+    const addSlots = () => setTotalSlots(prev => Math.min(40, prev + 4));
+    const removeSlots = () => {
+        // No eliminar slots ocupados
+        const slotsToRemove = Array.from({length: 4}, (_, i) => `slot-${totalSlots - i}`);
+        const occupied = slotsToRemove.some(slotId => assignedSlots[slotId]);
+        if (occupied) {
+            alert('No se pueden eliminar espacios que están ocupados. Desasigne primero los sensores.');
+            return;
+        }
+        setTotalSlots(prev => Math.max(16, prev - 4));
+    };
+
+    // helper to build slot array
+    const generateSlots = (count) => Array.from({ length: count }, (_, i) => ({ id: `slot-${i+1}`, label: `${i+1}` }));
+
+    // initially assign active sensors into slots up to the current slot count
+    const [assignedSlots, setAssignedSlots] = useState(() => {
+        const init = {};
+        const count = Math.min(mockActiveSensors.length, totalSlots);
+        mockActiveSensors.slice(0, count).forEach((s, i) => {
+            init[`slot-${i+1}`] = s;
+        });
+        return init;
+    });
+
+    // drag/move support - payload may come from slot or list
+    const handleDragStart = (e, payload) => {
+        if (!payload) {
+            e.preventDefault();
+            return;
+        }
+        const data = JSON.stringify(payload);
+        // set both types for cross-browser compatibility
+        e.dataTransfer.setData('application/json', data);
+        e.dataTransfer.setData('text/plain', data);
+        e.dataTransfer.effectAllowed = 'move';
+    };
+
+    const handleDragOver = e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e, targetSlot) => {
+        e.preventDefault();
+        e.currentTarget.classList.remove('drag-over');
+        let jsonData = e.dataTransfer.getData('application/json');
+        if (!jsonData) {
+            // try fallback type
+            jsonData = e.dataTransfer.getData('text/plain');
+        }
+        if (!jsonData) return;
+        let payload;
+        try { payload = JSON.parse(jsonData); } catch { return; }
+
+        // payload may come from sidebar or another slot
+        if (payload.source === 'list' && payload.sensor) {
+            const sensor = payload.sensor;
+            setAssignedSlots(prev => {
+                const newSlots = { ...prev };
+                Object.keys(newSlots).forEach(k => {
+                    if (newSlots[k].id === sensor.id) delete newSlots[k];
+                });
+                newSlots[targetSlot.id] = sensor;
+                return newSlots;
+            });
+        } else if (payload.source === 'slot' && payload.slotId) {
+            const slotId = payload.slotId;
+            if (slotId === targetSlot.id) return;
+            setAssignedSlots(prev => {
+                const newSlots = { ...prev };
+                const moving = newSlots[slotId];
+                if (!moving) return prev;
+                if (newSlots[targetSlot.id]) {
+                    newSlots[slotId] = newSlots[targetSlot.id];
+                } else {
+                    delete newSlots[slotId];
+                }
+                newSlots[targetSlot.id] = moving;
+                return newSlots;
+            });
+        } else if (payload.id) {
+            // fallback: treat payload as sensor object
+            const sensor = payload;
+            setAssignedSlots(prev => {
+                const newSlots = { ...prev };
+                Object.keys(newSlots).forEach(k => {
+                    if (newSlots[k].id === sensor.id) delete newSlots[k];
+                });
+                newSlots[targetSlot.id] = sensor;
+                return newSlots;
+            });
+        }
+    };
+
+    const handleDragEnter = e => {
+        e.currentTarget.classList.add('drag-over');
+    };
+    const handleDragLeave = e => {
+        e.currentTarget.classList.remove('drag-over');
+    };
+    const handleDragEnd = e => {
+        e.currentTarget.classList.remove('dragging');
+    };
+
+    const slots = useMemo(() => generateSlots(totalSlots), [totalSlots]);
+
     const unassignedSensors = useMemo(() => {
         const assignedIds = new Set(Object.values(assignedSlots).map(s => s.id));
-        const unassigned = [];
-        mockActiveSensors.forEach(s => { if (!assignedIds.has(s.id)) unassigned.push({...s, type: 'active'}); });
-        mockAvailableSensors.forEach(s => { if (!assignedIds.has(s.id)) unassigned.push({...s, type: 'available'}); });
-        return unassigned;
+        const list = [];
+        mockActiveSensors.forEach(s => { if (!assignedIds.has(s.id)) list.push({...s, type: 'active'}); });
+        mockAvailableSensors.forEach(s => { if (!assignedIds.has(s.id)) list.push({...s, type: 'available'}); });
+        return list;
     }, [assignedSlots]);
 
     const filteredUnassigned = unassignedSensors.filter(s => 
@@ -40,7 +150,13 @@ export default function SensorLayout() {
     );
 
     const handleSlotClick = (slot) => {
-        if (assignedSlots[slot.id]) {
+        const assigned = assignedSlots[slot.id];
+        if (assigned) {
+            // active sensors should remain assigned
+            if (assigned.type === 'active' || assigned.temp != null) {
+                alert('Este sensor activo no puede desasignarse manualmente.');
+                return;
+            }
             const confirmRemove = window.confirm(`¿Desea desasignar el sensor de ${slot.label}?`);
             if (confirmRemove) {
                 const newAssigned = { ...assignedSlots };
@@ -69,29 +185,23 @@ export default function SensorLayout() {
         setTimeout(() => setSelectedSlot(null), 300);
     };
 
-    const filteredActive = mockActiveSensors.filter(s => 
-        s.name.toLowerCase().includes(searchActive.toLowerCase()) || 
-        s.id.toLowerCase().includes(searchActive.toLowerCase())
-    );
+    // only show sensors that are not already assigned to a slot
+    const assignedIds = useMemo(() => new Set(Object.values(assignedSlots).map(s => s.id)), [assignedSlots]);
 
-    const filteredAvailable = mockAvailableSensors.filter(s => 
-        s.name.toLowerCase().includes(searchAvailable.toLowerCase()) || 
-        s.mac.toLowerCase().includes(searchAvailable.toLowerCase())
-    );
+    // Mostrar todos los sensores activos, con badge si están asignados
+    const filteredActive = mockActiveSensors
+        .filter(s =>
+            s.name.toLowerCase().includes(searchActive.toLowerCase()) || 
+            s.id.toLowerCase().includes(searchActive.toLowerCase())
+        );
 
-    // Generar un máximo de 40 espacios, segmentados en plantillas de 8 en 8 (5 plantillas)
-    const groups = [];
-    const BLOCKS_OF = 8;
-    const MAX_SLOTS = 40;
-    const numberOfGroups = Math.ceil(MAX_SLOTS / BLOCKS_OF);
+    const filteredAvailable = mockAvailableSensors
+        .filter(s => !assignedIds.has(s.id))
+        .filter(s =>
+            s.name.toLowerCase().includes(searchAvailable.toLowerCase()) || 
+            s.mac.toLowerCase().includes(searchAvailable.toLowerCase())
+        );
 
-    for (let i = 0; i < numberOfGroups; i++) {
-        const slots = [];
-        for (let j = 0; j < BLOCKS_OF; j++) {
-            slots.push({ id: `slot-${i * BLOCKS_OF + j + 1}`, label: `${i * BLOCKS_OF + j + 1}` });
-        }
-        groups.push({ id: `group-${i + 1}`, name: `Plantilla Modelo-${i + 1}`, slots });
-    }
 
     return (
         <div className="sensor-layout-container fade-in">
@@ -126,11 +236,15 @@ export default function SensorLayout() {
                     </div>
                     <div className="sensor-list">
                         {filteredActive.map(sensor => (
-                            <div key={sensor.id} className="sensor-item active-sensor">
+                            <div key={sensor.id} className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} draggable onDragStart={e => {
+                                        e.dataTransfer.setData('application/json', JSON.stringify({ source: 'list', sensor }));
+                                        e.dataTransfer.effectAllowed = 'copy';
+                                    }}>
                                 <div className="sensor-info">
                                     <span className="sensor-name">{sensor.name}</span>
                                     <span className="sensor-id">ID: {sensor.id}</span>
                                 </div>
+
                                 <div className="sensor-value">{sensor.temp}°C</div>
                             </div>
                         ))}
@@ -168,64 +282,75 @@ export default function SensorLayout() {
                     </div>
                     <div className="sensor-list">
                         {filteredAvailable.map(sensor => (
-                            <div key={sensor.id} className="sensor-item available-sensor">
+                            <div key={sensor.id} className={`sensor-item active-sensor ${assignedIds.has(sensor.id) ? 'assigned-in-list' : ''}`} draggable onDragStart={e => {
+                                    e.dataTransfer.setData('application/json', JSON.stringify({ source: 'list', sensor }));
+                                    e.dataTransfer.effectAllowed = 'copy';
+                                }}>
                                 <div className="sensor-info">
                                     <span className="sensor-name">{sensor.name}</span>
-                                    <span className="sensor-mac">MAC: {sensor.mac}</span>
+                                    <span className="sensor-id">ID: {sensor.id}</span>
                                 </div>
-                                {/* Para futuro Drag&Drop o click para asignar */}
-                                <button className="add-btn" title="Asignar al espacio">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                </button>
+                                <div className="sensor-value">Stock</div>
                             </div>
                         ))}
-                        {filteredAvailable.length === 0 && <div className="empty-state">No se encontraron sensores disponibles.</div>}
+                        {filteredAvailable.length === 0 && <div className="empty-state">No hay sensores disponibles.</div>}
                     </div>
                 </div>
             </div>
 
+
             {/* Panel Principal Derecho: Espacios Físicos (Plantillas) */}
             <div className="sensor-main-area">
                 <div className="slots-header compact-header">
-                    <h2>Asignación a Espacios Físicos</h2>
+                    <h2>Asignación a Espacios Físicos ({totalSlots} espacios)</h2>
+                    <div className="slots-header-actions">
+                        <button className="add-slot-btn" onClick={addSlots} disabled={totalSlots >= 40}>
+                            +4
+                        </button>
+                        <button className="remove-slot-btn" onClick={removeSlots} disabled={totalSlots <= 16}>
+                            -4
+                        </button>
+                        <div className="slot-legend">
+                            <span className="legend-item occupied"></span> Ocupado
+                            <span className="legend-item empty"></span> Vacío
+                        </div>
+                    </div>
                 </div>
+
                 
                 <div className="slots-container custom-scroll">
-                    {groups.map((group) => (
-                        <div key={group.id} className="slot-group">
-                            <div className="group-title-wrapper">
-                                <h4 className="group-title">{group.name}</h4>
-                                <span className="group-badge">8 Slots</span>
+                    {slots.map(slot => {
+                        const assigned = assignedSlots[slot.id];
+                        return (
+                            <div 
+                                key={slot.id} 
+                                className={`slot-item ${assigned ? 'assigned' : 'empty-slot'}`}
+                                onClick={() => handleSlotClick(slot)}
+                                title={assigned ? 'Clic para desasignar / arrastra para mover' : 'Clic o arrastra para asignar sensor'}
+                                draggable={!!assigned}
+                                onDragStart={e => { e.currentTarget.classList.add('dragging'); handleDragStart(e, { source: 'slot', slotId: slot.id, sensor: assigned }); }}
+                                onDragEnd={handleDragEnd}
+                                onDragEnter={handleDragEnter}
+                                onDragLeave={handleDragLeave}
+                                onDragOver={handleDragOver}
+                                onDrop={e => handleDrop(e, slot)}
+                            >
+                                <div className="slot-number">{slot.label}</div>
+                                {assigned ? (
+                                    <div className="slot-assigned-info">
+                                        <span className="assigned-name" title={assigned.name}>{assigned.name}</span>
+                                        {assigned.temp ? (
+                                            <span className="assigned-val temp">{assigned.temp}°C</span>
+                                        ) : (
+                                            <span className="assigned-val mac">{assigned.mac ? assigned.mac.substring(12) : 'Stock'}</span>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="slot-placeholder">Vacío</div>
+                                )}
                             </div>
-                            <div className="slot-grid">
-                                {group.slots.map(slot => {
-                                    const assigned = assignedSlots[slot.id];
-                                    return (
-                                        <div 
-                                            key={slot.id} 
-                                            className={`slot-item ${assigned ? 'assigned' : 'empty-slot'}`}
-                                            onClick={() => handleSlotClick(slot)}
-                                            title={assigned ? 'Clic para desasignar' : 'Clic para asignar sensor'}
-                                        >
-                                            <div className="slot-number">{slot.label}</div>
-                                            {assigned ? (
-                                                <div className="slot-assigned-info">
-                                                    <span className="assigned-name" title={assigned.name}>{assigned.name}</span>
-                                                    {assigned.temp ? (
-                                                        <span className="assigned-val temp">{assigned.temp}°C</span>
-                                                    ) : (
-                                                        <span className="assigned-val mac">{assigned.mac ? assigned.mac.substring(12) : 'Stock'}</span>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className="slot-placeholder">Vacío</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
 
