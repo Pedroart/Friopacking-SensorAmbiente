@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'preact/hooks';
+import Modal from '../components/modal';
 import './sensorLayout.css';
 
 // Mock data para previsualizar, con nombres y datos realistas para los sensores
@@ -26,6 +27,18 @@ export default function SensorLayout() {
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [sheetSearch, setSheetSearch] = useState('');
 
+    // Modal state
+    const [modal, setModal] = useState({ 
+        isOpen: false, 
+        title: '', 
+        message: '', 
+        onConfirm: () => {}, 
+        type: 'info',
+        confirmText: 'Confirmar'
+    });
+
+    const closeModal = () => setModal(prev => ({ ...prev, isOpen: false }));
+
     // total number of physical slots per tunnel (max 40)
     const [totalSlots, setTotalSlots] = useState(16);
     const addSlots = () => setTotalSlots(prev => Math.min(40, prev + 4));
@@ -34,7 +47,14 @@ export default function SensorLayout() {
         const slotsToRemove = Array.from({length: 4}, (_, i) => `slot-${totalSlots - i}`);
         const occupied = slotsToRemove.some(slotId => assignedSlots[slotId]);
         if (occupied) {
-            alert('No se pueden eliminar espacios que están ocupados. Desasigne primero los sensores.');
+            setModal({
+                isOpen: true,
+                title: 'Acción No Permitida',
+                message: 'No se pueden eliminar espacios que están ocupados. Desasigne primero los sensores.',
+                onConfirm: closeModal,
+                confirmText: 'Entendido',
+                type: 'info'
+            });
             return;
         }
         setTotalSlots(prev => Math.max(16, prev - 4));
@@ -158,12 +178,18 @@ export default function SensorLayout() {
     const handleSlotClick = (slot) => {
         const assigned = assignedSlots[slot.id];
         if (assigned) {
-            const confirmRemove = window.confirm(`¿Desea desasignar "${assigned.name}" de este espacio?`);
-            if (confirmRemove) {
-                const newAssigned = { ...assignedSlots };
-                delete newAssigned[slot.id];
-                setAssignedSlots(newAssigned);
-            }
+            setModal({
+                isOpen: true,
+                title: 'Desasignar Sensor',
+                message: `¿Desea desasignar "${assigned.name}" de este espacio?`,
+                onConfirm: () => {
+                    const newAssigned = { ...assignedSlots };
+                    delete newAssigned[slot.id];
+                    setAssignedSlots(newAssigned);
+                },
+                type: 'danger',
+                confirmText: 'Desasignar'
+            });
         } else {
             setSelectedSlot(slot);
             setIsSheetOpen(true);
@@ -422,6 +448,16 @@ export default function SensorLayout() {
                     </div>
                 </div>
             </div>
+
+            <Modal 
+                isOpen={modal.isOpen}
+                onClose={closeModal}
+                onConfirm={modal.onConfirm}
+                title={modal.title}
+                message={modal.message}
+                type={modal.type}
+                confirmText={modal.confirmText}
+            />
         </div>
     );
 }
