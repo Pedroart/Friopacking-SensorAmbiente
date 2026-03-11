@@ -12,6 +12,7 @@
     gap: 1.5rem;
     height: calc(100vh - 100px); /* Fill remaining height roughly */
     box-sizing: border-box;
+    overflow: hidden; /* Evita scroll en la página entera */
 }
 
 @media (max-width: 1024px) {
@@ -403,6 +404,8 @@
     transition: all 0.1s ease;
     position: relative;
     cursor: pointer;
+    min-width: 0; /* Impide que desborde el grid si el contenido es mas grande */
+    overflow: hidden; /* Asegura que el contenido extra no salga del borde */
 }
 
 .slot-item:hover {
@@ -415,9 +418,9 @@
 
 .slot-number {
     position: absolute;
-    top: 4px;
+    top: 2px; /* Ajustado para dar más espacio */
     left: 4px;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     color: #475569; /* Numero muy disimulado */
     font-weight: 600;
 }
@@ -588,7 +591,7 @@
 .slot-item.assigned {
     background: rgba(14, 165, 233, 0.05);
     border-color: #0ea5e9;
-    align-items: stretch;
+    align-items: center; /* Cambiado a center por el texto truncado */
     padding: 0.2rem;
 }
 
@@ -604,25 +607,29 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    margin-top: 4px;
+    margin-top: 6px; /* Más abajo para no chocar con el número */
     text-align: center;
+    width: 100%;
+    min-width: 0;
 }
 
 .assigned-name {
-    font-size: 0.6rem; /* Aún más chico para que entre en 48px */
+    font-size: 0.55rem; /* Aún más chico para que entre en 48px */
     color: #e2e8f0;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 100%;
+    width: 100%; /* Toma todo el ancho disponible truncando lo que no cabe */
     line-height: 1.1;
+    padding: 0 2px; /* Margen ligero a los lados */
+    box-sizing: border-box;
 }
 
 .assigned-val {
     font-size: 0.6rem;
     font-weight: 700;
-    margin-top: 2px;
+    margin-top: 1px;
 }
 
 .assigned-val.temp {
@@ -634,4 +641,5 @@
     background: rgba(167, 139, 250, 0.1);
     padding: 0.1rem 0.3rem;
     border-radius: 4px;
+    font-size: 0.55rem;
 }
