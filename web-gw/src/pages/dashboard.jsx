@@ -21,27 +21,50 @@ export default function Dashboard() {
     return (
         <div className="dashboard fade-in">
             <div className="kpi-row">
-                <div className="kpi-card">
-                    <h3>Total Sensors</h3>
-                    <p className="kpi-value">{metrics.total}</p>
+                <div className="kpi-card total">
+                    <div className="kpi-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.29 7 12 12 20.71 7"></polyline><line x1="12" y1="22" x2="12" y2="12"></line></svg>
+                    </div>
+                    <div className="kpi-content">
+                        <h3>Total Sensores</h3>
+                        <p className="kpi-value">{metrics.total}</p>
+                    </div>
                 </div>
-                <div className="kpi-card">
-                    <h3>Active Sensors</h3>
-                    <p className="kpi-value">{metrics.active}</p>
+                <div className="kpi-card active">
+                    <div className="kpi-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                    </div>
+                    <div className="kpi-content">
+                        <h3>Sensores Activos</h3>
+                        <p className="kpi-value">{metrics.active}</p>
+                    </div>
                 </div>
-                <div className="kpi-card">
-                    <h3>Avg. Temperature</h3>
-                    <p className="kpi-value">{metrics.avgTemp}&deg;C</p>
+                <div className="kpi-card temp">
+                    <div className="kpi-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"></path></svg>
+                    </div>
+                    <div className="kpi-content">
+                        <h3>Temp. Promedio</h3>
+                        <p className="kpi-value">{metrics.avgTemp}&deg;C</p>
+                    </div>
                 </div>
-                <div className="kpi-card">
-                    <h3>System Uptime</h3>
-                    <p className="kpi-value">{metrics.uptime}%</p>
+                <div className="kpi-card uptime">
+                    <div className="kpi-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                    </div>
+                    <div className="kpi-content">
+                        <h3>Disponibilidad</h3>
+                        <p className="kpi-value">{metrics.uptime}%</p>
+                    </div>
                 </div>
             </div>
 
             <div className="charts-row">
                 <div className="chart temperature-trend">
-                    <h4>Temperature Trends</h4>
+                    <div className="chart-header">
+                        <h4>Tendencia de Temperatura</h4>
+                        <span className="chart-subtitle">Últimas 24 horas</span>
+                    </div>
                     <svg viewBox="0 0 100 50" preserveAspectRatio="none">
                         <defs>
                             <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
@@ -66,7 +89,10 @@ export default function Dashboard() {
                     </svg>
                 </div>
                 <div className="chart sensor-status">
-                    <h4>Sensor Status</h4>
+                    <div className="chart-header">
+                        <h4>Estado de Sensores</h4>
+                        <span className="chart-subtitle">Resumen operativo</span>
+                    </div>
                     <div className="donut-container">
                         <svg viewBox="0 0 36 36" className="donut">
                             <circle
@@ -90,7 +116,7 @@ export default function Dashboard() {
                         </svg>
                         <div className="donut-label">
                             <span className="main-val">{status.active}</span>
-                            <span className="sub-val">Active</span>
+                            <span className="sub-val">Operativos</span>
                         </div>
                     </div>
                 </div>
