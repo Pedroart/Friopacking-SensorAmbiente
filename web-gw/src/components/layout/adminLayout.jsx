@@ -67,9 +67,7 @@ export default function AdminLayout({ children, title = "Overview" }) {
                     <a href="/sensores" className={`nav-item ${window.location.pathname === '/sensores' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.sensor} Asignación de Sensores
                     </a>
-                    <a href="/usuarios" className={`nav-item ${window.location.pathname === '/usuarios' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.users} Usuarios
-                    </a>
+                    {/* Removed Usuarios link as part of navigation cleanup */}
                     <a href="/configuracion" className={`nav-item ${window.location.pathname === '/configuracion' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.settings} Configuración
                     </a>
