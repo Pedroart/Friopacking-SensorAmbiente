@@ -108,8 +108,18 @@ export default function AdminLayout({ children, title = "Overview" }) {
                 </div>
                 <div className="topbar-right">
                     <div className="topbar-badges">
-                        <StatusBadge online={isOnline} label={isOnline ? 'Internet conectado' : 'Sin Internet'} icon={icons.globe} />
-                        <StatusBadge online={isDeviceConnected} label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} icon={icons.router} />
+                        <StatusBadge 
+                            online={isOnline} 
+                            label={isOnline ? 'Internet conectado' : 'Sin Internet'} 
+                            description={isOnline ? 'La interfaz web tiene acceso a la red externa' : 'No se detecta conexión a internet'}
+                            icon={icons.globe} 
+                        />
+                        <StatusBadge 
+                            online={isDeviceConnected} 
+                            label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} 
+                            description={isDeviceConnected ? 'Los sensores están enviando datos correctamente' : 'No hay comunicación activa con los sensores'}
+                            icon={icons.router} 
+                        />
                     </div>
                     <a href="/perfil" style={{textDecoration: 'none', color: 'inherit'}}>
                         <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>PA</div>
