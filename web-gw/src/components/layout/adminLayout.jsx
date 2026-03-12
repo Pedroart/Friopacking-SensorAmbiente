@@ -15,6 +15,25 @@ export default function AdminLayout({ children, title = "Overview" }) {
     // Device connection status (placeholder for WebSocket/API)
     const [isDeviceConnected] = useState(false);
 
+    // Current User Session State
+    const [currentUser, setCurrentUser] = useState({
+        username: 'User',
+        initials: 'U',
+        email: 'user@friopacking.pe'
+    });
+
+    useEffect(() => {
+        // Hydrate from SessionStorage
+        const sessionUser = sessionStorage.getItem('auth_user');
+        if (sessionUser) {
+            setCurrentUser({
+                username: sessionUser,
+                initials: sessionUser.charAt(0).toUpperCase(),
+                email: `${sessionUser}@friopacking.pe`
+            });
+        }
+    }, []);
+
     useEffect(() => {
         const goOnline = () => setIsOnline(true);
         const goOffline = () => setIsOnline(false);
@@ -29,8 +48,10 @@ export default function AdminLayout({ children, title = "Overview" }) {
     const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
 
     const handleLogout = () => {
-        // Here you would clear localStorage/sessionStorage if needed
-        localStorage.removeItem('user_session'); 
+        // Clear all session and localStorage auth tokens
+        sessionStorage.removeItem('auth_user');
+        sessionStorage.removeItem('auth_role');
+        localStorage.removeItem('auth_remember_username'); 
         route('/login');
     };
     
@@ -64,10 +85,10 @@ export default function AdminLayout({ children, title = "Overview" }) {
 
             <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
                 <a href="/perfil" className="sidebar-header" style={{textDecoration: 'none', color: 'inherit'}}>
-                    <div className="avatar-initials">PA</div>
+                    <div className="avatar-initials">{currentUser.initials}</div>
                     <div className="user-info">
-                        <span className="user-name">Pedro Arteta Flores</span>
-                        <span className="user-email">parteta@friopacking.pe</span>
+                        <span className="user-name" style={{ textTransform: 'capitalize' }}>{currentUser.username}</span>
+                        <span className="user-email">{currentUser.email}</span>
                     </div>
                 </a>
                 
@@ -122,7 +143,9 @@ export default function AdminLayout({ children, title = "Overview" }) {
                         />
                     </div>
                     <a href="/perfil" style={{textDecoration: 'none', color: 'inherit'}}>
-                        <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>PA</div>
+                        <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>
+                            {currentUser.initials}
+                        </div>
                     </a>
                 </div>
             </header>

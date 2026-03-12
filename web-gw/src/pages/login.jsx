@@ -26,29 +26,36 @@ export default function Login() {
         setError('');
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    username: form.username,
-                    password: form.password,
-                }),
-            });
+            // Mocked User Database from C++ struct:
+            // Role 0: Viewer | Role 1: Operator | Role 2: Admin
+            const users = [
+                { username: 'viewer', password: 'viewer123', role: 0 },
+                { username: 'operator', password: 'operator123', role: 1 },
+                { username: 'admin', password: 'admin123', role: 2 },
+            ];
 
-            const data = await response.json();
+            // Artificial delay to mimic network request
+            await new Promise(r => setTimeout(r, 800));
 
-            if (!response.ok || !data.ok) {
-                throw new Error(data.message || 'Credenciales inválidas');
+            const userEntry = users.find(
+                u => u.username === form.username && u.password === form.password
+            );
+
+            if (!userEntry) {
+                throw new Error('Credenciales inválidas');
             }
 
-            // Guardar datos del usuario
-            localStorage.setItem('auth_user', data.user);
-            localStorage.setItem('auth_role', String(data.role));
+            // Always use sessionStorage to force relogging on fresh tab/close
+            sessionStorage.setItem('auth_user', userEntry.username);
+            sessionStorage.setItem('auth_role', String(userEntry.role));
 
-            // opcional: guardar flag de recordarme
-            localStorage.setItem('auth_remember', String(form.remember));
+            // Optional: can use localStorage specifically ONLY for remember-me toggles 
+            // but the auth token (in this case auth_user) stays session bound.
+            if(form.remember) {
+                localStorage.setItem('auth_remember_username', userEntry.username);
+            } else {
+                localStorage.removeItem('auth_remember_username');
+            }
 
             route('/');
         } catch (err) {

@@ -1,15 +1,35 @@
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { useSnackbar } from '../contexts/SnackbarContext';
 import './profile.css';
 
 export default function Profile() {
     const { showSnackbar } = useSnackbar();
     
-    const [name, setName] = useState('Pedro Arteta');
-    const [role, setRole] = useState('Admin'); // 3 rules: viewer, operator, admin
+    const [name, setName] = useState('...');
+    const [role, setRole] = useState('...'); // 3 rules: viewer, operator, admin
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+
+    useEffect(() => {
+        // Map integer to string roles
+        const roleMap = {
+            '0': 'Viewer',
+            '1': 'Operator',
+            '2': 'Admin'
+        };
+
+        const sessionUser = sessionStorage.getItem('auth_user');
+        const sessionRoleStr = sessionStorage.getItem('auth_role');
+        
+        if (sessionUser) {
+            setName(sessionUser.charAt(0).toUpperCase() + sessionUser.slice(1));
+        }
+        
+        if (sessionRoleStr && roleMap[sessionRoleStr]) {
+            setRole(roleMap[sessionRoleStr]);
+        }
+    }, []);
 
     const handleSaveProfile = () => {
         // TODO: Update Profile API
