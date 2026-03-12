@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "copy-to-data": "powershell -Command \"Remove-Item ../radiobase/data/* -Recurse -Force -ErrorAction SilentlyContinue; Copy-Item dist/* ../radiobase/data/ -Recurse -Force\"",
+    "build:esp": "vite build && npm run copy-to-data"
   },
   "dependencies": {
     "@picocss/pico": "^2.1.1",
