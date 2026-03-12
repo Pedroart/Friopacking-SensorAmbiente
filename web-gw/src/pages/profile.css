@@ -1,0 +1,129 @@
+/* profile.css — Premium compact profile styles */
+
+.profile-view {
+    max-width: 800px;
+    margin: 0 auto;
+    color: #e2e8f0;
+}
+
+.profile-view h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f8fafc;
+    margin: 0 0 1rem 0;
+    letter-spacing: -0.01em;
+}
+
+.profile-layout {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+/* ── Form Card ── */
+.profile-card {
+    flex: 1;
+    min-width: 300px;
+    background: rgba(30, 41, 59, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    animation: profileCardIn 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes profileCardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin: 0 0 1rem 0;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Form Fields ── */
+.profile-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    flex: 1;
+}
+
+.profile-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.profile-field label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #94a3b8;
+    letter-spacing: 0.02em;
+}
+
+.profile-field input {
+    width: 100%;
+    height: 32px;
+    padding: 0 0.6rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.5);
+    color: #f8fafc;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+    outline: none;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.profile-field input:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 2px rgba(59,130,246,0.12);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+/* ── Actions ── */
+.profile-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+    justify-content: flex-end;
+}
+
+.profile-actions button {
+    padding: 0.4rem 1rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    font-family: inherit;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59,130,246,0.2);
+}
+
+.btn-save:hover {
+    box-shadow: 0 4px 14px rgba(59,130,246,0.35);
+    transform: translateY(-1px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .profile-layout {
+        flex-direction: column;
+    }
+}

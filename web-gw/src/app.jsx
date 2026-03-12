@@ -1,9 +1,12 @@
 import './app.css'
 import Routes from './routes'
+import { SnackbarProvider } from './contexts/SnackbarContext'
 
 export function App() {
   
   return (
-    <Routes/>
+    <SnackbarProvider>
+      <Routes/>
+    </SnackbarProvider>
   )
 }
