@@ -112,7 +112,7 @@ export default function AdminLayout({ children, title = "Overview" }) {
                         <StatusBadge online={isDeviceConnected} label={isDeviceConnected ? 'Dispositivos conectados' : 'Sin dispositivos'} icon={icons.router} />
                     </div>
                     <a href="/perfil" style={{textDecoration: 'none', color: 'inherit'}}>
-                        <div className="avatar-initials" style={{ width: '32px', height: '32px', fontSize: '0.8rem' }}>PA</div>
+                        <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>PA</div>
                     </a>
                 </div>
             </header>

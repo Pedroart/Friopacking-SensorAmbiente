@@ -5,8 +5,8 @@ import './profile.css';
 export default function Profile() {
     const { showSnackbar } = useSnackbar();
     
-    const [name, setName] = useState('Pedro Arteta Flores');
-    const [email, setEmail] = useState('parteta@friopacking.pe');
+    const [name, setName] = useState('Pedro Arteta');
+    const [role, setRole] = useState('Admin'); // 3 rules: viewer, operator, admin
     const [oldPassword, setOldPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -43,28 +43,24 @@ export default function Profile() {
                     
                     <div className="profile-fields">
                         <div className="profile-field">
-                            <label>Nombre Completo</label>
+                            <label>Usuario</label>
                             <input 
                                 type="text" 
                                 value={name} 
-                                onInput={e => setName(e.target.value)} 
-                                placeholder="Tu nombre" 
+                                disabled
+                                style={{ opacity: 0.7, cursor: 'not-allowed' }}
                             />
                         </div>
 
                         <div className="profile-field">
-                            <label>Correo Electrónico</label>
+                            <label>Rol</label>
                             <input 
-                                type="email" 
-                                value={email} 
-                                onInput={e => setEmail(e.target.value)} 
-                                placeholder="tu@correo.pe" 
+                                type="text" 
+                                value={role} 
+                                disabled
+                                style={{ opacity: 0.7, cursor: 'not-allowed', color: 'var(--accent-color, #3b82f6)', fontWeight: 600 }}
                             />
                         </div>
-                    </div>
-
-                    <div className="profile-actions">
-                        <button className="btn-save" onClick={handleSaveProfile} type="button">Guardar Detalles</button>
                     </div>
                 </div>
 
