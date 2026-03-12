@@ -6,6 +6,7 @@ import './adminLayout.css';
 
 export default function AdminLayout({ children, title = "Overview" }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
     
     // Modal state for logout confirmation
     const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -84,13 +85,13 @@ export default function AdminLayout({ children, title = "Overview" }) {
             ></div>
 
             <aside className={`admin-sidebar ${isMobileMenuOpen ? 'open' : ''}`}>
-                <a href="/perfil" className="sidebar-header" style={{textDecoration: 'none', color: 'inherit'}}>
+                <div className="sidebar-header">
                     <div className="avatar-initials">{currentUser.initials}</div>
                     <div className="user-info">
                         <span className="user-name" style={{ textTransform: 'capitalize' }}>{currentUser.username}</span>
                         <span className="user-email">{currentUser.email}</span>
                     </div>
-                </a>
+                </div>
                 
                 <nav className="sidebar-nav">
                     <a href="/" className={`nav-item ${window.location.pathname === '/' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
@@ -102,21 +103,8 @@ export default function AdminLayout({ children, title = "Overview" }) {
                     <a href="/configuracion" className={`nav-item ${window.location.pathname === '/configuracion' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
                         {icons.settings} Configuración
                     </a>
-                    <a href="/perfil" className={`nav-item ${window.location.pathname === '/perfil' ? 'active' : ''}`} onClick={() => setIsMobileMenuOpen(false)}>
-                        {icons.profile} Cuenta
-                    </a>
                     
                     <div className="sidebar-spacer"></div>
-
-                    <button 
-                        className="nav-item logout-btn" 
-                        onClick={() => {
-                            setIsMobileMenuOpen(false);
-                            setIsLogoutModalOpen(true);
-                        }}
-                    >
-                        {icons.logout} Cerrar Sesión
-                    </button>
                 </nav>
             </aside>
 
@@ -142,11 +130,44 @@ export default function AdminLayout({ children, title = "Overview" }) {
                             icon={icons.router} 
                         />
                     </div>
-                    <a href="/perfil" style={{textDecoration: 'none', color: 'inherit'}}>
-                        <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>
-                            {currentUser.initials}
-                        </div>
-                    </a>
+                    
+                    <div className="user-dropdown-container">
+                        <button 
+                            className="avatar-btn" 
+                            onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                            aria-expanded={isUserMenuOpen}
+                        >
+                            <div className="avatar-initials" style={{ width: '40px', height: '40px', fontSize: '1.1rem' }}>
+                                {currentUser.initials}
+                            </div>
+                        </button>
+
+                        {isUserMenuOpen && (
+                            <>
+                                <div className="dropdown-overlay" onClick={() => setIsUserMenuOpen(false)}></div>
+                                <div className="user-dropdown-menu">
+                                    <div className="dropdown-header">
+                                        <span className="dropdown-name" style={{ textTransform: 'capitalize' }}>{currentUser.username}</span>
+                                        <span className="dropdown-email">{currentUser.email}</span>
+                                    </div>
+                                    <hr className="dropdown-divider" />
+                                    <a href="/perfil" className="dropdown-item" onClick={() => setIsUserMenuOpen(false)}>
+                                        {icons.profile} Mi Perfil
+                                    </a>
+                                    <button 
+                                        className="dropdown-item logout" 
+                                        onClick={() => {
+                                            setIsUserMenuOpen(false);
+                                            setIsLogoutModalOpen(true);
+                                        }}
+                                    >
+                                        {icons.logout} Cerrar Sesión
+                                    </button>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
                 </div>
             </header>
 
