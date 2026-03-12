@@ -11,36 +11,28 @@ body, html {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   box-sizing: border-box;
+  margin: 0 !important;
+  max-width: none !important;
   
-  /* Animated Dark Gradient Background */
-  background: linear-gradient(-45deg, #090e17, #111827, #1e1b4b, #0f172a);
+  /* Animated Dark Gradient Background combined with glows */
+  background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent 40%),
+              radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.1), transparent 40%),
+              linear-gradient(-45deg, #090e17, #111827, #1e1b4b, #0f172a);
   background-size: 400% 400%;
   animation: gradientBG 15s ease infinite;
+  overflow: hidden;
 }
 
 @keyframes gradientBG {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
-}
-
-.login-main {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.15), transparent),
-                radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.1), transparent),
-                var(--bg-main);
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
 }
 
 .login-main::before {

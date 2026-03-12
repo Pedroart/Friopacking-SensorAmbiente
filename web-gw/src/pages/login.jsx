@@ -59,7 +59,7 @@ export default function Login() {
     };
 
     return (
-        <main className="login-main">
+        <div className="login-main">
             <article className="login-card">
                 <hgroup>
                     <h1>Bienvenido</h1>
@@ -110,6 +110,6 @@ export default function Login() {
                     </button>
                 </form>
             </article>
-        </main>
+        </div>
     );
 }
