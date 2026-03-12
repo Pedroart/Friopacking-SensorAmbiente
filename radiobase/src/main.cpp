@@ -1,16 +1,5 @@
-#include "driver/network_manager.h"
-#include "driver/storage_nvs.h"
-#include "core/deviceConfig.h"
 #include "services/web_service.h"
-
-
-StorageNVS storage;
-SystemConfig sys;
-FeatureConfig feature;
-UserConfig users;
-NetworkConfig network;
-
-WebService webService;
+#include "core/appState.h"
 
 void setup() {
 

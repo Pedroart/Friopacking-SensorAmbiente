@@ -34,6 +34,8 @@ public:
 
     UserConfig loadUsers();
     UserConfig saveUsers(const UserConfig& in);
+    UserEntry* loadRole(UserConfig& cfg,const String& role);
+    
 
 private:
     StorageNVS* storage = nullptr;

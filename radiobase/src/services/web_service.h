@@ -6,3 +6,5 @@ public:
     bool begin();
     void loop();
 };
+
+extern WebService webService;

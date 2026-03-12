@@ -87,7 +87,7 @@ UserConfig DeviceConfig::loadUsers()
 
     cfg.operador.role = UserRole::OPERATOR;
     storage->readBool("usr.operador.en", cfg.operador.enabled, true);
-    storage->readString("usr.operador.user", cfg.operador.username, "operador");
+    storage->readString("usr.operador.user", cfg.operador.username, "operator");
     storage->readString("usr.operador.pass", cfg.operador.password_hash, USER_PASS_DEFAULT_SHA256);
 
     cfg.viewer.role = UserRole::VIEWER;
@@ -96,6 +96,23 @@ UserConfig DeviceConfig::loadUsers()
     storage->readString("usr.viewer.pass", cfg.viewer.password_hash, USER_PASS_DEFAULT_SHA256);
 
     return cfg;
+}
+
+UserEntry* DeviceConfig::loadRole(UserConfig& cfg, const String& role){
+
+    if (role == "admin") {
+        return &cfg.admin;
+    }
+
+    if (role == "operator") {
+        return &cfg.operador;
+    }
+
+    if (role == "viewer") {
+        return &cfg.viewer;
+    }
+
+    return nullptr;
 }
 
 UserConfig DeviceConfig::saveUsers(const UserConfig &in)

@@ -12,7 +12,7 @@
 
 
 #define AP_NAME             DEVICE_NAME "_" STR(DEVICE_ID_AMBIENTE)
-#define AP_PASS             "Friopacking"
+#define AP_PASS             ""
 
 
 #define USER_PASS_DEFAULT_SHA256    "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4" // 1234
