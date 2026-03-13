@@ -132,19 +132,7 @@ void registerAuthRoutes(AsyncWebServer &server)
             user->password_hash = newPassword;
 
             // Guardar cambios en memoria persistente
-            bool saved = Config.saveUsers(users);   // <-- ajusta esto a tu función real
-
-            if (!saved)
-            {
-                JsonDocument res;
-                res["success"] = false;
-                res["message"] = "error_save_user";
-
-                char out[128];
-                serializeJson(res, out);
-                request->send(500, "application/json", out);
-                return;
-            }
+            Config.saveUsers(users);   // <-- ajusta esto a tu función real
 
             JsonDocument res;
             res["success"] = true;

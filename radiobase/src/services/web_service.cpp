@@ -16,7 +16,8 @@ bool WebService::begin()
 
     registerHttpRoutes(server);
     registerAuthRoutes(server);
-    
+    registerNetworkRoutes(server);
+
     registerWsRoutes(ws);
     server.addHandler(&ws);
     
