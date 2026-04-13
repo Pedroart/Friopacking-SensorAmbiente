@@ -1,6 +1,6 @@
 #include "web_service.h"
 #include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
+#include <AsyncWebServer_ESP32_SC_W5500.h>
 #include "api/http_routes.h"
 #include "api/ws_routes.h"
 #include "api/http_auth.h"
@@ -17,6 +17,7 @@ bool WebService::begin()
     registerHttpRoutes(server);
     registerAuthRoutes(server);
     registerNetworkRoutes(server);
+    registerBeaconRoutes(server);
 
     registerWsRoutes(ws);
     server.addHandler(&ws);

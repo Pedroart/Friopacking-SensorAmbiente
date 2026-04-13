@@ -14,33 +14,45 @@ class ScanCallbacks : public NimBLEScanCallbacks
         // len=26
         // payload=02 01 06 02 0A 00 13 FF F5 10 8C E7 B1 A9 FC 50 69 65 83 4A 18 B5 9D 7B BD 98
 
-        const uint8_t* p = advertisedDevice->getPayload().data();
+        const uint8_t *p = advertisedDevice->getPayload().data();
         const size_t plen = advertisedDevice->getPayload().size();
 
         // Formato esperado:
         // 02 01 06 02 0A XX 13 FF F5 10 <data...>
-        if (plen < 10) return;
+        if (plen < 10)
+            return;
 
         // filtro fijo por posiciones
-        if (p[7] != 0xFF) return;
-        if (p[8] != 0x10 || p[9] != 0xF5) return;
+        if (p[7] != 0xFF)
+            return;
+        if (p[8] != 0x10 || p[9] != 0xF5)
+            return;
 
         AdvRaw m{};
 
         m.rssi_read = advertisedDevice->getRSSI();
         m.rssi_send = (int8_t)p[5];
+        m.rx_ms = millis();
 
         NimBLEAddress a = advertisedDevice->getAddress();
         memcpy(m.addr, a.getVal(), 6);
-        
+/*
+        Serial.printf("BLE_SCAN MAC: %02X:%02X:%02X:%02X:%02X:%02X",
+                      m.addr[0], m.addr[1], m.addr[2], m.addr[3], m.addr[4], m.addr[5]);
+*/
         const size_t data_start = 10;
         size_t data_len = plen - data_start;
-        if (data_len > sizeof(m.payload)) data_len = sizeof(m.payload);
+        if (data_len > sizeof(m.payload))
+            data_len = sizeof(m.payload);
 
         m.len = (uint8_t)data_len;
         memcpy(m.payload, p + data_start, data_len);
 
-        (void)xQueueSend(advQ, &m, 0);
+        BaseType_t ok = xQueueSend(advQ, &m, 0);
+        if (ok != pdTRUE)
+        {
+            Serial.println("BLE: advQ llena o error al enviar");
+        }
     }
 };
 
@@ -52,7 +64,7 @@ void ble_rx_init()
     scan = NimBLEDevice::getScan();
     Serial.printf("BLE: Scan object created");
 
-    scan->setScanCallbacks(new ScanCallbacks(), false);
+    scan->setScanCallbacks(new ScanCallbacks(), true);
     scan->setActiveScan(false);
     scan->setInterval(160);
     scan->setWindow(120);
@@ -66,7 +78,7 @@ void ble_rx_init()
         const int ndevice = 16;
         const int nsed = 3;
 
-        advQ = xQueueCreate(ndevice*nsed, sizeof(AdvRaw));
+        advQ = xQueueCreate(ndevice * nsed, sizeof(AdvRaw));
         Serial.printf("BLE: Queue created");
     }
 };

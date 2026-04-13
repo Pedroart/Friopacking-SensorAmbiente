@@ -1,7 +1,10 @@
 #include "network_manager.h"
 #include <WiFi.h>
+#include <SPI.h>
+#include <AsyncWebServer_ESP32_SC_W5500.h>
+#include "config.h"
 
-bool applyWifiConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg)
+bool applyNetworkConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg)
 {
     WiFi.disconnect(true, true);
     WiFi.mode(WIFI_OFF);
@@ -9,6 +12,7 @@ bool applyWifiConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg)
 
     bool apEnabled = Feacfg.wifiApEnable;
     bool staEnabled = Feacfg.wifiStaEnable;
+    bool ethEnabled = Feacfg.ethernetEnable;
 
     if (apEnabled && staEnabled)
     {
@@ -90,6 +94,41 @@ bool applyWifiConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg)
 
         Serial.print("Conectando STA a: ");
         Serial.println(Netcfg.sta.ssid);
+    }
+
+    // -------------------------
+    // Configurar Ethernet
+    // -------------------------
+    if (ethEnabled)
+    {
+
+        pinMode(ETH_RST, OUTPUT);
+        digitalWrite(ETH_RST, LOW);
+        delay(60);
+        digitalWrite(ETH_RST, HIGH);
+        delay(160);
+
+        ESP32_W5500_onEvent();
+
+        uint64_t chipid = ESP.getEfuseMac();
+
+        uint8_t ethMac[6];
+        ethMac[0] = (chipid >> 40) & 0xFF;
+        ethMac[1] = (chipid >> 32) & 0xFF;
+        ethMac[2] = (chipid >> 24) & 0xFF;
+        ethMac[3] = (chipid >> 16) & 0xFF;
+        ethMac[4] = (chipid >> 8) & 0xFF;
+        ethMac[5] = chipid & 0xFF;
+
+        bool ok = ETH.begin(
+            ETH_MISO,
+            ETH_MOSI,
+            ETH_SCK,
+            ETH_CS,
+            ETH_INT,
+            ETH_SPI_CLOCK_MHZ,
+            ETH_SPI_HOST,
+            ethMac);
     }
 
     return ok;

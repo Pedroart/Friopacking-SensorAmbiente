@@ -3,28 +3,65 @@
 #include "responseJson.h"
 #include "core/appState.h"
 
-
 void registerHttpRoutes(AsyncWebServer &server)
 {
     server.on("/api/network/status", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
+              {
         String json = "{";
         json += "\"ip\":\"" + WiFi.localIP().toString() + "\"";
         json += "}";
 
-        request->send(200, "application/json", json);
-    });
+        request->send(200, "application/json", json); });
 
     server.on("/api/device/info", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
-        request->send(200, "application/json", "{\"device\":\"gateway\"}");
-    });
+              { request->send(200, "application/json", "{\"device\":\"gateway\"}"); });
+}
+
+void registerFeatureRoutes(AsyncWebServer &server)
+{
+    server.on("/api/feature", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        JsonDocument doc;
+        JsonObject features = doc["features"].to<JsonObject>();
+        features["ethernet_enable"] = feature.ethernetEnable;
+        features["wifi_ap_enable"] = feature.wifiApEnable;
+        features["wifi_sta_enable"] = feature.wifiStaEnable;
+
+        sendJson(request, 200, doc); });
+
+    server.on("/api/features", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+              {
+            JsonDocument doc;
+            DeserializationError err = deserializeJson(doc, data, len);
+
+            if (err)
+            {
+                sendError(request, 400, "invalid_json");
+                return;
+            }
+
+            FeatureConfig cfg = feature;
+
+            if (!doc["ethernet_enable"].isNull())
+                cfg.ethernetEnable = doc["ethernet_enable"].as<bool>();
+
+            if (!doc["wifi_ap_enable"].isNull())
+                cfg.wifiApEnable = doc["wifi_ap_enable"].as<bool>();
+
+            if (!doc["wifi_sta_enable"].isNull())
+                cfg.wifiStaEnable = doc["wifi_sta_enable"].as<bool>();
+
+            feature = cfg;
+
+            Config.saveFeatures(feature);   // o el metodo que uses para persistirlo
+
+            sendSuccess(request, "Configuracion de features actualizada"); });
 }
 
 void registerNetworkRoutes(AsyncWebServer &server)
 {
     server.on("/api/network", HTTP_GET, [](AsyncWebServerRequest *request)
-    {
+              {
         JsonDocument doc;
 
         JsonObject eth = doc["eth"].to<JsonObject>();
@@ -43,14 +80,10 @@ void registerNetworkRoutes(AsyncWebServer &server)
         sta["password"] = network.sta.password;
         ipToJson(sta["net"].to<JsonObject>(), network.sta.net);
 
-        sendJson(request, 200, doc);
-    });
+        sendJson(request, 200, doc); });
 
-    server.on("/api/network/ethernet", HTTP_POST,
-        [](AsyncWebServerRequest *request) {},
-        nullptr,
-        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-        {
+    server.on("/api/network/ethernet", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+              {
             JsonDocument doc;
             DeserializationError err = deserializeJson(doc, data, len);
 
@@ -80,15 +113,10 @@ void registerNetworkRoutes(AsyncWebServer &server)
 
             Config.saveNetwork(network);
 
-            sendSuccess(request, "Configuracion Ethernet actualizada");
-        }
-    );
+            sendSuccess(request, "Configuracion Ethernet actualizada"); });
 
-    server.on("/api/network/ap", HTTP_POST,
-        [](AsyncWebServerRequest *request) {},
-        nullptr,
-        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-        {
+    server.on("/api/network/ap", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+              {
             JsonDocument doc;
             DeserializationError err = deserializeJson(doc, data, len);
 
@@ -149,15 +177,10 @@ void registerNetworkRoutes(AsyncWebServer &server)
 
             Config.saveNetwork(network);
 
-            sendSuccess(request, "Configuracion AP actualizada");
-        }
-    );
+            sendSuccess(request, "Configuracion AP actualizada"); });
 
-    server.on("/api/network/sta", HTTP_POST,
-        [](AsyncWebServerRequest *request) {},
-        nullptr,
-        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-        {
+    server.on("/api/network/sta", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
+              {
             JsonDocument doc;
             DeserializationError err = deserializeJson(doc, data, len);
 
@@ -199,7 +222,129 @@ void registerNetworkRoutes(AsyncWebServer &server)
 
             Config.saveNetwork(network);
 
-            sendSuccess(request, "Configuracion STA actualizada");
-        }
-    );
+            sendSuccess(request, "Configuracion STA actualizada"); });
 }
+
+void registerBeaconRoutes(AsyncWebServer &server)
+{
+    server.on("/api/map", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+    JsonDocument doc;
+    JsonArray arr = doc["map"].to<JsonArray>();
+
+    if (slotManager.lock())
+    {
+        BeaconMapEntry *map = slotManager.getMap();
+
+        for (int i = 0; i < MAX_SLOTS; ++i)
+        {
+            JsonObject obj = arr.add<JsonObject>();
+            obj["index"] = i;
+            obj["enabled"] = map[i].enabled;
+            obj["addr"] = uint64ToHex(map[i].addr);
+            obj["slot"] = map[i].slot;
+        }
+
+        slotManager.unlock();
+    }
+
+    sendJson(request, 200, doc); });
+
+    server.on("/api/map", HTTP_POST, [](AsyncWebServerRequest *request) {}, NULL, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              {
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, data, len);
+
+    if (err)
+    {
+        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+        return;
+    }
+
+    int index = doc["index"] | -1;
+    bool enabled = doc["enabled"] | false;
+    String addrStr = doc["addr"] | "";
+    int slot = doc["slot"] | -1;
+
+    if (index < 0 || index >= MAX_SLOTS || slot < 0 || slot >= MAX_SLOTS)
+    {
+        request->send(400, "application/json", "{\"error\":\"invalid index/slot\"}");
+        return;
+    }
+
+    uint64_t addr = hexToUint64(addrStr);
+
+    if (!slotManager.setMapEntry(index, addr, slot, enabled))
+    {
+        request->send(500, "application/json", "{\"error\":\"save failed\"}");
+        return;
+    }
+
+    request->send(200, "application/json", "{\"ok\":true}"); });
+
+    server.on("/api/map", HTTP_DELETE, [](AsyncWebServerRequest *request)
+              {
+    if (!slotManager.clearMap())
+    {
+        request->send(500, "application/json", "{\"error\":\"clear failed\"}");
+        return;
+    }
+
+    request->send(200, "application/json", "{\"ok\":true}"); });
+
+    server.on("/api/slots", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+    JsonDocument doc;
+    JsonArray arr = doc["slots"].to<JsonArray>();
+
+    if (slotManager.lock())
+    {
+        SlotState *slots = slotManager.getSlots();
+
+        for (int i = 0; i < MAX_SLOTS; ++i)
+        {
+            JsonObject obj = arr.add<JsonObject>();
+            obj["index"] = i;
+            obj["used"] = slots[i].used;
+            obj["addr"] = obj["addr"] = addrToHex(slots[i].addr);;
+            obj["last_seen_ms"] = slots[i].last_seen_ms;
+
+            JsonObject last = obj["last"].to<JsonObject>();
+            last["environment_id"] = slots[i].last.environment_id;
+            last["device_id"] = slots[i].last.device_id;
+        }
+
+        slotManager.unlock();
+    }
+
+    sendJson(request, 200, doc); });
+
+    server.on("/api/beacons", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        JsonDocument doc;
+        JsonArray arr = doc["items"].to<JsonArray>();
+
+        const DiscoveredBeacon *items = beaconRegistry.items();
+
+        for (int i = 0; i < MAX_DISCOVERED_BEACONS; ++i)
+        {
+            if (!items[i].used) continue;
+
+            JsonObject obj = arr.add<JsonObject>();
+            obj["index"] = i;
+            obj["used"] = items[i].used;
+            obj["is_new"] = items[i].isNew;
+            obj["addr"] = addrToHex(items[i].addr);
+            obj["environment_id"] = items[i].environment_id;
+            obj["device_id"] = items[i].device_id;
+            obj["rssi"] = items[i].rssi;
+            obj["first_seen_ms"] = items[i].first_seen_ms;
+            obj["last_seen_ms"] = items[i].last_seen_ms;
+            obj["seen_count"] = items[i].seen_count;
+        }
+
+        doc["max"] = MAX_DISCOVERED_BEACONS;
+        doc["new_count"] = beaconRegistry.countNew();
+
+        sendJson(request, 200, doc); });
+}  

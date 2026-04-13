@@ -16,8 +16,8 @@ struct EthernetConfig {
 };
 
 struct WifiApConfig {
-    char ssid[32];
-    char password[64];
+    char ssid[32]= {0};
+    char password[64]= {0};
     uint8_t channel;
     bool hidden;
     uint8_t max_clients;
@@ -25,8 +25,8 @@ struct WifiApConfig {
 };
 
 struct WifiStaConfig {
-    char ssid[32];
-    char password[64];
+    char ssid[32]= {0};
+    char password[64]= {0};
     IpSettings net;
 };
 

@@ -85,3 +85,22 @@ void sendSuccess(AsyncWebServerRequest *request, const String &message)
     doc["message"] = message;
     sendJson(request, 200, doc);
 }
+
+String uint64ToHex(uint64_t value)
+{
+    char buf[17];
+    sprintf(buf, "%012llX", value); // 6 bytes MAC
+    return String(buf);
+}
+
+uint64_t hexToUint64(const String &hex)
+{
+    return strtoull(hex.c_str(), nullptr, 16);
+}
+
+String addrToHex(uint64_t value)
+{
+    char buf[17];
+    sprintf(buf, "%012llX", value);
+    return String(buf);
+}

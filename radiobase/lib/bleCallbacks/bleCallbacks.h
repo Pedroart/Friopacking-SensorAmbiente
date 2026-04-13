@@ -11,6 +11,7 @@ struct AdvRaw
     uint8_t addr[6];
     uint8_t len;
     uint8_t payload[16];
+    uint32_t rx_ms;
 };
 
 extern QueueHandle_t advQ;

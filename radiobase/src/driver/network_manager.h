@@ -2,4 +2,4 @@
 #include "./core/networkConfig.h"
 #include "./core/deviceConfig.h"
 
-bool applyWifiConfig(const NetworkConfig& Netcfg, const FeatureConfig& Feacfg);
+bool applyNetworkConfig(const NetworkConfig& Netcfg, const FeatureConfig& Feacfg);

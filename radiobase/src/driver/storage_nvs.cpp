@@ -12,8 +12,14 @@ bool StorageNVS::writeString(const char* key, const String& value)
 
 bool StorageNVS::readString(const char* key, String& value, const String& def)
 {
-    value = prefs.getString(key, def);
-    return true;
+    if (prefs.isKey(key))
+    {
+        value = prefs.getString(key);
+        return true;
+    }
+
+    value = def;
+    return false;
 }
 
 bool StorageNVS::writeUInt(const char* key, uint32_t value)
@@ -23,8 +29,14 @@ bool StorageNVS::writeUInt(const char* key, uint32_t value)
 
 bool StorageNVS::readUInt(const char* key, uint32_t& value, uint32_t def)
 {
-    value = prefs.getUInt(key, def);
-    return true;
+    if (prefs.isKey(key))
+    {
+        value = prefs.getUInt(key);
+        return true;
+    }
+
+    value = def;
+    return false;
 }
 
 bool StorageNVS::writeUShort(const char* key, uint16_t value)
@@ -34,19 +46,31 @@ bool StorageNVS::writeUShort(const char* key, uint16_t value)
 
 bool StorageNVS::readUShort(const char* key, uint16_t& value, uint16_t def)
 {
-    value = prefs.getUShort(key, def);
-    return true;
+    if (prefs.isKey(key))
+    {
+        value = prefs.getUShort(key);
+        return true;
+    }
+
+    value = def;
+    return false;
 }
 
 bool StorageNVS::writeBool(const char* key, bool value)
 {
-    return prefs.putBool(key, value);
+    return prefs.putBool(key, value) > 0;
 }
 
 bool StorageNVS::readBool(const char* key, bool& value, bool def)
 {
-    value = prefs.getBool(key, def);
-    return true;
+    if (prefs.isKey(key))
+    {
+        value = prefs.getBool(key);
+        return true;
+    }
+
+    value = def;
+    return false;
 }
 
 bool StorageNVS::writeIP(const char *key, const IPAddress &value)
@@ -63,26 +87,31 @@ bool StorageNVS::writeIP(const char *key, const IPAddress &value)
 
 bool StorageNVS::readIP(const char *key, IPAddress &value, const IPAddress &def)
 {
+    if (!prefs.isKey(key))
+    {
+        value = def;
+        return false;
+    }
+
     uint8_t ip[4];
 
-    if (prefs.getBytesLength(key) == sizeof(ip))
+    if (prefs.getBytesLength(key) == sizeof(ip) &&
+        prefs.getBytes(key, ip, sizeof(ip)) == sizeof(ip))
     {
-        if (prefs.getBytes(key, ip, sizeof(ip)) == sizeof(ip))
-        {
-            value = IPAddress(ip[0], ip[1], ip[2], ip[3]);
-            return true;
-        }
+        value = IPAddress(ip[0], ip[1], ip[2], ip[3]);
+        return true;
     }
 
     value = def;
     return false;
 }
 
-
-bool StorageNVS::remove(const char* key){
+bool StorageNVS::remove(const char* key)
+{
     return prefs.remove(key);
 }
 
-bool StorageNVS::clear(){
+bool StorageNVS::clear()
+{
     return prefs.clear();
 }

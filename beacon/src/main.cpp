@@ -20,6 +20,7 @@ struct BeaconPayload
   int16_t company = 0xF510; // Friopacking S.L.
   // BODY
   uint8_t version_id = 1;
+  uint8_t environment_id = 1;
   uint8_t device_id = 0;
   uint8_t flags = 0;
   int16_t TMP117_tem_x100 = 0;
@@ -69,22 +70,23 @@ static void beacon_to_head_body(const BeaconPayload &p,
                                 uint8_t *body, size_t body_len)
 {
   const uint8_t *raw = reinterpret_cast<const uint8_t *>(&p);
+  constexpr size_t HEAD_SIZE = sizeof(p.company);
+  constexpr size_t BODY_SIZE = sizeof(BeaconPayload) - HEAD_SIZE;
 
-  // HEAD = company (2 bytes)
-  if (head && head_len >= 2)
+  if (head && head_len >= HEAD_SIZE)
   {
-    memcpy(head, raw, 2);
+    memcpy(head, raw, HEAD_SIZE);
   }
 
-  // BODY = resto del payload (8 bytes)
-  if (body && body_len >= 8)
+  if (body && body_len >= BODY_SIZE)
   {
-    memcpy(body, raw + 2, 8);
+    memcpy(body, raw + HEAD_SIZE, BODY_SIZE);
   }
 }
 
 struct DeviceConfig
 {
+  uint32_t environment_id = 0;
   uint32_t device_id = 0;
   int32_t chip_temp_offset_x100 = 0; // tareado en centésimas
 };
@@ -136,7 +138,7 @@ static DeviceConfig loadDeviceConfigFromKV()
 
   // ID entero (si no existe, default 0)
   c.device_id = kv_get_u32(KEY_DEVICE_ID, 0);
-
+  c.environment_id = kv_get_u32(KEY_ENVIRONMENT_ID, 0);
   // Offset de temperatura (si no existe, default 0)
   c.chip_temp_offset_x100 = kv_get_i32(KEY_CHIP_TEMP_OFFSET_X100, 0);
 
@@ -258,6 +260,7 @@ static BeaconPayload buildBeaconPayload(const DeviceConfig &dc,
   p.company = 0xF510;
 
   // OJO: en tu struct device_id es uint8_t. Si dc.device_id es 32-bit, recorta:
+  p.environment_id = (uint8_t)(dc.environment_id & 0xFF);
   p.device_id = (uint8_t)(dc.device_id & 0xFF);
 
   p.version_id = 1;
@@ -305,8 +308,12 @@ void setup()
     Flags f = computeFlags(d);
 
     BeaconPayload p = buildBeaconPayload(dc, d, f);
-    uint8_t head[2];
-    uint8_t body[8];
+
+    constexpr size_t HEAD_SIZE = 2;
+    constexpr size_t BODY_SIZE = sizeof(BeaconPayload) - HEAD_SIZE;
+
+    uint8_t head[HEAD_SIZE];
+    uint8_t body[BODY_SIZE];
 
     beacon_to_head_body(p, head, sizeof(head), body, sizeof(body));
 
