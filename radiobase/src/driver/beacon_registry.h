@@ -1,5 +1,7 @@
 #pragma once
 #include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 #include "ble_types.h"
 
 #ifndef MAX_DISCOVERED_BEACONS
@@ -27,9 +29,13 @@ public:
     bool seen(const BeaconDecoded &read);
     int countNew() const;
     void clearNewFlag(int index);
-
-    const DiscoveredBeacon *items() const;
+    bool snapshot(DiscoveredBeacon *out, size_t count) const;
 
 private:
+    bool lock(TickType_t timeout = portMAX_DELAY) const;
+    void unlock() const;
+
+private:
+    mutable SemaphoreHandle_t mutex = nullptr;
     DiscoveredBeacon list[MAX_DISCOVERED_BEACONS]{};
 };

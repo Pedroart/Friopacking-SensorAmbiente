@@ -7,7 +7,7 @@
 
 class BleProceses {
 public:
-    void begin();
+    bool begin();
     BlePipelineStats stats() const;
     void resetStats();
 

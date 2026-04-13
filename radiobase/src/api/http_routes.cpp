@@ -1,27 +1,379 @@
 #include "http_routes.h"
 #include <WiFi.h>
+#include <AsyncWebServer_ESP32_SC_W5500.h>
 #include "responseJson.h"
 #include "core/appState.h"
 
+static void fillNetworkStatus(JsonDocument &doc)
+{
+    JsonObject featuresObj = doc["features"].to<JsonObject>();
+    featuresObj["ethernet_enable"] = feature.ethernetEnable;
+    featuresObj["wifi_ap_enable"] = feature.wifiApEnable;
+    featuresObj["wifi_sta_enable"] = feature.wifiStaEnable;
+
+    JsonObject wifi = doc["wifi"].to<JsonObject>();
+    wifi["mode"] = static_cast<int>(WiFi.getMode());
+    wifi["sta_status"] = static_cast<int>(WiFi.status());
+    wifi["sta_connected"] = WiFi.status() == WL_CONNECTED;
+    wifi["sta_ip"] = WiFi.localIP().toString();
+    wifi["ap_ip"] = WiFi.softAPIP().toString();
+    wifi["ap_clients"] = WiFi.softAPgetStationNum();
+
+    JsonObject eth = doc["ethernet"].to<JsonObject>();
+    eth["enabled"] = feature.ethernetEnable;
+    eth["ip"] = ETH.localIP().toString();
+    eth["link_up"] = ETH.linkUp();
+}
+
+static void fillNetworkConfig(JsonDocument &doc, bool includeSecrets = true)
+{
+    JsonObject eth = doc["eth"].to<JsonObject>();
+    ipToJson(eth["net"].to<JsonObject>(), network.eth.net);
+
+    JsonObject ap = doc["ap"].to<JsonObject>();
+    ap["ssid"] = network.ap.ssid;
+    ap["channel"] = network.ap.channel;
+    ap["hidden"] = network.ap.hidden;
+    ap["max_clients"] = network.ap.max_clients;
+    ap["password"] = includeSecrets ? String(network.ap.password) : String("***");
+    ipToJson(ap["net"].to<JsonObject>(), network.ap.net);
+
+    JsonObject sta = doc["sta"].to<JsonObject>();
+    sta["ssid"] = network.sta.ssid;
+    sta["password"] = includeSecrets ? String(network.sta.password) : String("***");
+    ipToJson(sta["net"].to<JsonObject>(), network.sta.net);
+}
+
+static void sendApplyResult(
+    AsyncWebServerRequest *request,
+    bool applied,
+    const char *message)
+{
+    JsonDocument doc;
+    JsonObject data = createResponse(doc, applied, message);
+    data["applied"] = applied;
+    data["requires_reboot"] = false;
+
+    JsonDocument statusDoc;
+    fillNetworkStatus(statusDoc);
+    data["status"] = statusDoc.as<JsonVariantConst>();
+
+    sendJson(request, applied ? 200 : 500, doc);
+}
+
+static void markNetworkApplyFailure(const char *error)
+{
+    bootStatus.networkApplied = false;
+    bootStatus.lastError = error;
+    refreshBootReady();
+}
+
+static void markNetworkApplySuccess()
+{
+    bootStatus.networkApplied = true;
+    refreshBootReady();
+    if (bootStatus.ready)
+    {
+        bootStatus.lastError = "";
+    }
+}
+
+static void sendFeatureConfig(AsyncWebServerRequest *request)
+{
+    JsonDocument doc;
+    JsonObject data = createResponse(doc, true);
+    JsonObject features = data["features"].to<JsonObject>();
+    features["ethernet_enable"] = feature.ethernetEnable;
+    features["wifi_ap_enable"] = feature.wifiApEnable;
+    features["wifi_sta_enable"] = feature.wifiStaEnable;
+    sendJson(request, 200, doc);
+}
+
+static void handleFeatureUpdate(AsyncWebServerRequest *request, uint8_t *payload, size_t len)
+{
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, len);
+
+    if (err)
+    {
+        sendError(request, 400, "invalid_json");
+        return;
+    }
+
+    FeatureConfig cfg = feature;
+
+    if (!doc["ethernet_enable"].isNull())
+        cfg.ethernetEnable = doc["ethernet_enable"].as<bool>();
+
+    if (!doc["wifi_ap_enable"].isNull())
+        cfg.wifiApEnable = doc["wifi_ap_enable"].as<bool>();
+
+    if (!doc["wifi_sta_enable"].isNull())
+        cfg.wifiStaEnable = doc["wifi_sta_enable"].as<bool>();
+
+    if (!applyNetworkConfig(network, cfg))
+    {
+        markNetworkApplyFailure("feature_apply_failed");
+        sendApplyResult(request, false, "No se pudo aplicar la configuracion de features");
+        return;
+    }
+
+    feature = cfg;
+    markNetworkApplySuccess();
+    Config.saveFeatures(feature);
+
+    sendApplyResult(request, true, "Configuracion de features actualizada");
+}
+
+static void handleEthernetUpdate(AsyncWebServerRequest *request, uint8_t *payload, size_t len)
+{
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, len);
+
+    if (err)
+    {
+        sendError(request, 400, "invalid_json");
+        return;
+    }
+
+    JsonObject net = doc["net"].as<JsonObject>();
+    if (net.isNull())
+    {
+        sendError(request, 400, "missing_net");
+        return;
+    }
+
+    EthernetConfig cfg = network.eth;
+    String error;
+
+    if (!jsonToIpSettings(net, cfg.net, error))
+    {
+        sendError(request, 400, error);
+        return;
+    }
+
+    NetworkConfig nextNetwork = network;
+    nextNetwork.eth = cfg;
+
+    if (!applyNetworkConfig(nextNetwork, feature))
+    {
+        markNetworkApplyFailure("ethernet_apply_failed");
+        sendApplyResult(request, false, "No se pudo aplicar la configuracion Ethernet");
+        return;
+    }
+
+    network = nextNetwork;
+    markNetworkApplySuccess();
+    Config.saveNetwork(network);
+
+    sendApplyResult(request, true, "Configuracion Ethernet actualizada");
+}
+
+static void handleApUpdate(AsyncWebServerRequest *request, uint8_t *payload, size_t len)
+{
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, len);
+
+    if (err)
+    {
+        sendError(request, 400, "invalid_json");
+        return;
+    }
+
+    WifiApConfig cfg = network.ap;
+
+    String ssid = doc["ssid"] | "";
+    String password = doc["password"] | "";
+    int channel = doc["channel"] | cfg.channel;
+    bool hidden = doc["hidden"] | cfg.hidden;
+    int maxClients = doc["max_clients"] | cfg.max_clients;
+
+    if (!ssid.isEmpty())
+    {
+        strncpy(cfg.ssid, ssid.c_str(), sizeof(cfg.ssid) - 1);
+        cfg.ssid[sizeof(cfg.ssid) - 1] = '\0';
+    }
+
+    if (!password.isEmpty())
+    {
+        strncpy(cfg.password, password.c_str(), sizeof(cfg.password) - 1);
+        cfg.password[sizeof(cfg.password) - 1] = '\0';
+    }
+
+    if (channel < 1 || channel > 13)
+    {
+        sendError(request, 400, "channel_invalido");
+        return;
+    }
+
+    if (maxClients < 1 || maxClients > 8)
+    {
+        sendError(request, 400, "max_clients_invalido");
+        return;
+    }
+
+    cfg.channel = static_cast<uint8_t>(channel);
+    cfg.hidden = hidden;
+    cfg.max_clients = static_cast<uint8_t>(maxClients);
+
+    JsonObject net = doc["net"].as<JsonObject>();
+    if (!net.isNull())
+    {
+        String error;
+        if (!jsonToIpSettings(net, cfg.net, error))
+        {
+            sendError(request, 400, error);
+            return;
+        }
+    }
+
+    NetworkConfig nextNetwork = network;
+    nextNetwork.ap = cfg;
+
+    if (!applyNetworkConfig(nextNetwork, feature))
+    {
+        markNetworkApplyFailure("ap_apply_failed");
+        sendApplyResult(request, false, "No se pudo aplicar la configuracion AP");
+        return;
+    }
+
+    network = nextNetwork;
+    markNetworkApplySuccess();
+    Config.saveNetwork(network);
+
+    sendApplyResult(request, true, "Configuracion AP actualizada");
+}
+
+static void handleStaUpdate(AsyncWebServerRequest *request, uint8_t *payload, size_t len)
+{
+    JsonDocument doc;
+    DeserializationError err = deserializeJson(doc, payload, len);
+
+    if (err)
+    {
+        sendError(request, 400, "invalid_json");
+        return;
+    }
+
+    WifiStaConfig cfg = network.sta;
+
+    String ssid = doc["ssid"] | "";
+    String password = doc["password"] | "";
+
+    if (!ssid.isEmpty())
+    {
+        strncpy(cfg.ssid, ssid.c_str(), sizeof(cfg.ssid) - 1);
+        cfg.ssid[sizeof(cfg.ssid) - 1] = '\0';
+    }
+
+    if (!password.isEmpty())
+    {
+        strncpy(cfg.password, password.c_str(), sizeof(cfg.password) - 1);
+        cfg.password[sizeof(cfg.password) - 1] = '\0';
+    }
+
+    JsonObject net = doc["net"].as<JsonObject>();
+    if (!net.isNull())
+    {
+        String error;
+        if (!jsonToIpSettings(net, cfg.net, error))
+        {
+            sendError(request, 400, error);
+            return;
+        }
+    }
+
+    NetworkConfig nextNetwork = network;
+    nextNetwork.sta = cfg;
+
+    if (!applyNetworkConfig(nextNetwork, feature))
+    {
+        markNetworkApplyFailure("sta_apply_failed");
+        sendApplyResult(request, false, "No se pudo aplicar la configuracion STA");
+        return;
+    }
+
+    network = nextNetwork;
+    markNetworkApplySuccess();
+    Config.saveNetwork(network);
+
+    sendApplyResult(request, true, "Configuracion STA actualizada");
+}
+
 void registerHttpRoutes(AsyncWebServer &server)
 {
+    server.on("/api/system/status", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        JsonDocument doc;
+        JsonObject data = createResponse(doc, true);
+
+        data["ready"] = bootStatus.ready;
+        data["health"] = bootStatus.ready ? "ok" : "degraded";
+        data["uptime_ms"] = millis();
+        data["heap_free"] = ESP.getFreeHeap();
+        data["heap_min_free"] = ESP.getMinFreeHeap();
+
+        JsonObject device = data["device"].to<JsonObject>();
+        device["name"] = sys.name;
+        device["version"] = sys.version;
+        device["ambiente"] = sys.ambiente;
+        device["first_launch"] = sys.firstLaunch;
+
+        JsonObject boot = data["boot"].to<JsonObject>();
+        boot["storage_ready"] = bootStatus.storageReady;
+        boot["filesystem_ready"] = bootStatus.filesystemReady;
+        boot["config_loaded"] = bootStatus.configLoaded;
+        boot["beacon_registry_ready"] = bootStatus.beaconRegistryReady;
+        boot["slot_manager_ready"] = bootStatus.slotManagerReady;
+        boot["network_applied"] = bootStatus.networkApplied;
+        boot["web_ready"] = bootStatus.webReady;
+        boot["ble_ready"] = bootStatus.bleReady;
+        boot["boot_completed_ms"] = bootStatus.bootCompletedMs;
+        boot["last_error"] = bootStatus.lastError;
+
+        JsonObject runtime = data["runtime"].to<JsonObject>();
+        runtime["data_queue_ready"] = dataQ != nullptr;
+        runtime["adv_task_ready"] = advTaskHandle != nullptr;
+        runtime["beacon_logic_task_ready"] = beaconLogicTaskHandle != nullptr;
+
+        JsonDocument networkDoc;
+        fillNetworkStatus(networkDoc);
+        data["network"] = networkDoc.as<JsonVariantConst>();
+
+        sendJson(request, 200, doc); });
+
     server.on("/api/network/status", HTTP_GET, [](AsyncWebServerRequest *request)
               {
-        String json = "{";
-        json += "\"ip\":\"" + WiFi.localIP().toString() + "\"";
-        json += "}";
+        JsonDocument doc;
+        JsonObject data = createResponse(doc, true);
 
-        request->send(200, "application/json", json); });
+        JsonDocument statusDoc;
+        fillNetworkStatus(statusDoc);
+        data.set(statusDoc.as<JsonVariantConst>());
+        JsonObject device = data["device"].to<JsonObject>();
+        device["name"] = sys.name;
+        device["version"] = sys.version;
+        device["ambiente"] = sys.ambiente;
+        device["uptime_ms"] = millis();
+        device["heap_free"] = ESP.getFreeHeap();
+        device["heap_min_free"] = ESP.getMinFreeHeap();
+
+        sendJson(request, 200, doc); });
 
     server.on("/api/device/info", HTTP_GET, [](AsyncWebServerRequest *request)
-              { request->send(200, "application/json", "{\"device\":\"gateway\"}"); });
+              {
+        JsonDocument doc;
+        JsonObject data = createResponse(doc, true);
+        data["device"] = "gateway";
+        sendJson(request, 200, doc); });
 
     server.on("/api/ble/stats", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         BlePipelineStats stats = advertising.stats();
 
         JsonDocument doc;
-        JsonObject ble = doc["ble"].to<JsonObject>();
+        JsonObject data = createResponse(doc, true);
+        JsonObject ble = data["ble"].to<JsonObject>();
 
         ble["adv_received"] = stats.adv_received;
         ble["adv_dropped"] = stats.adv_dropped;
@@ -44,215 +396,51 @@ void registerHttpRoutes(AsyncWebServer &server)
     server.on("/api/ble/stats/reset", HTTP_POST, [](AsyncWebServerRequest *request)
               {
         advertising.resetStats();
-        request->send(200, "application/json", "{\"ok\":true}"); });
+        sendSuccess(request, "BLE stats reiniciadas"); });
 }
 
 void registerFeatureRoutes(AsyncWebServer &server)
 {
-    server.on("/api/feature", HTTP_GET, [](AsyncWebServerRequest *request)
-              {
-        JsonDocument doc;
-        JsonObject features = doc["features"].to<JsonObject>();
-        features["ethernet_enable"] = feature.ethernetEnable;
-        features["wifi_ap_enable"] = feature.wifiApEnable;
-        features["wifi_sta_enable"] = feature.wifiStaEnable;
+    server.on("/api/feature", HTTP_GET, sendFeatureConfig);
+    server.on("/api/features", HTTP_GET, sendFeatureConfig);
 
-        sendJson(request, 200, doc); });
+    server.on("/api/features", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleFeatureUpdate(request, data, len); });
 
-    server.on("/api/features", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-              {
-            JsonDocument doc;
-            DeserializationError err = deserializeJson(doc, data, len);
-
-            if (err)
-            {
-                sendError(request, 400, "invalid_json");
-                return;
-            }
-
-            FeatureConfig cfg = feature;
-
-            if (!doc["ethernet_enable"].isNull())
-                cfg.ethernetEnable = doc["ethernet_enable"].as<bool>();
-
-            if (!doc["wifi_ap_enable"].isNull())
-                cfg.wifiApEnable = doc["wifi_ap_enable"].as<bool>();
-
-            if (!doc["wifi_sta_enable"].isNull())
-                cfg.wifiStaEnable = doc["wifi_sta_enable"].as<bool>();
-
-            feature = cfg;
-
-            Config.saveFeatures(feature);   // o el metodo que uses para persistirlo
-
-            sendSuccess(request, "Configuracion de features actualizada"); });
+    server.on("/api/features", HTTP_PATCH, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleFeatureUpdate(request, data, len); });
 }
 
 void registerNetworkRoutes(AsyncWebServer &server)
 {
-    server.on("/api/network", HTTP_GET, [](AsyncWebServerRequest *request)
+    auto sendNetworkConfig = [](AsyncWebServerRequest *request)
               {
         JsonDocument doc;
+        JsonObject data = createResponse(doc, true);
+        JsonDocument configDoc;
+        fillNetworkConfig(configDoc);
+        data.set(configDoc.as<JsonVariantConst>());
+        sendJson(request, 200, doc); 
+    };
+    
 
-        JsonObject eth = doc["eth"].to<JsonObject>();
-        ipToJson(eth["net"].to<JsonObject>(), network.eth.net);
+    server.on("/api/network", HTTP_GET, sendNetworkConfig);
+    server.on("/api/network/config", HTTP_GET, sendNetworkConfig);
 
-        JsonObject ap = doc["ap"].to<JsonObject>();
-        ap["ssid"] = network.ap.ssid;
-        ap["password"] = network.ap.password;
-        ap["channel"] = network.ap.channel;
-        ap["hidden"] = network.ap.hidden;
-        ap["max_clients"] = network.ap.max_clients;
-        ipToJson(ap["net"].to<JsonObject>(), network.ap.net);
+    server.on("/api/network/ethernet", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleEthernetUpdate(request, data, len); });
+    server.on("/api/network/ethernet", HTTP_PATCH, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleEthernetUpdate(request, data, len); });
 
-        JsonObject sta = doc["sta"].to<JsonObject>();
-        sta["ssid"] = network.sta.ssid;
-        sta["password"] = network.sta.password;
-        ipToJson(sta["net"].to<JsonObject>(), network.sta.net);
+    server.on("/api/network/ap", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleApUpdate(request, data, len); });
+    server.on("/api/network/ap", HTTP_PATCH, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleApUpdate(request, data, len); });
 
-        sendJson(request, 200, doc); });
-
-    server.on("/api/network/ethernet", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-              {
-            JsonDocument doc;
-            DeserializationError err = deserializeJson(doc, data, len);
-
-            if (err)
-            {
-                sendError(request, 400, "invalid_json");
-                return;
-            }
-
-            JsonObject net = doc["net"].as<JsonObject>();
-            if (net.isNull())
-            {
-                sendError(request, 400, "missing_net");
-                return;
-            }
-
-            EthernetConfig cfg = network.eth;
-            String error;
-
-            if (!jsonToIpSettings(net, cfg.net, error))
-            {
-                sendError(request, 400, error);
-                return;
-            }
-
-            network.eth = cfg;
-
-            Config.saveNetwork(network);
-
-            sendSuccess(request, "Configuracion Ethernet actualizada"); });
-
-    server.on("/api/network/ap", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-              {
-            JsonDocument doc;
-            DeserializationError err = deserializeJson(doc, data, len);
-
-            if (err)
-            {
-                sendError(request, 400, "invalid_json");
-                return;
-            }
-
-            WifiApConfig cfg = network.ap;
-
-            String ssid = doc["ssid"] | "";
-            String password = doc["password"] | "";
-            int channel = doc["channel"] | cfg.channel;
-            bool hidden = doc["hidden"] | cfg.hidden;
-            int maxClients = doc["max_clients"] | cfg.max_clients;
-
-            if (!ssid.isEmpty())
-            {
-                strncpy(cfg.ssid, ssid.c_str(), sizeof(cfg.ssid) - 1);
-                cfg.ssid[sizeof(cfg.ssid) - 1] = '\0';
-            }
-
-            if (!password.isEmpty())
-            {
-                strncpy(cfg.password, password.c_str(), sizeof(cfg.password) - 1);
-                cfg.password[sizeof(cfg.password) - 1] = '\0';
-            }
-
-            if (channel < 1 || channel > 13)
-            {
-                sendError(request, 400, "channel invalido");
-                return;
-            }
-
-            if (maxClients < 1 || maxClients > 8)
-            {
-                sendError(request, 400, "max_clients invalido");
-                return;
-            }
-
-            cfg.channel = static_cast<uint8_t>(channel);
-            cfg.hidden = hidden;
-            cfg.max_clients = static_cast<uint8_t>(maxClients);
-
-            JsonObject net = doc["net"].as<JsonObject>();
-            if (!net.isNull())
-            {
-                String error;
-                if (!jsonToIpSettings(net, cfg.net, error))
-                {
-                    sendError(request, 400, error);
-                    return;
-                }
-            }
-
-            network.ap = cfg;
-
-            Config.saveNetwork(network);
-
-            sendSuccess(request, "Configuracion AP actualizada"); });
-
-    server.on("/api/network/sta", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total)
-              {
-            JsonDocument doc;
-            DeserializationError err = deserializeJson(doc, data, len);
-
-            if (err)
-            {
-                sendError(request, 400, "invalid_json");
-                return;
-            }
-
-            WifiStaConfig cfg = network.sta;
-
-            String ssid = doc["ssid"] | "";
-            String password = doc["password"] | "";
-
-            if (!ssid.isEmpty())
-            {
-                strncpy(cfg.ssid, ssid.c_str(), sizeof(cfg.ssid) - 1);
-                cfg.ssid[sizeof(cfg.ssid) - 1] = '\0';
-            }
-
-            if (!password.isEmpty())
-            {
-                strncpy(cfg.password, password.c_str(), sizeof(cfg.password) - 1);
-                cfg.password[sizeof(cfg.password) - 1] = '\0';
-            }
-
-            JsonObject net = doc["net"].as<JsonObject>();
-            if (!net.isNull())
-            {
-                String error;
-                if (!jsonToIpSettings(net, cfg.net, error))
-                {
-                    sendError(request, 400, error);
-                    return;
-                }
-            }
-
-            network.sta = cfg;
-
-            Config.saveNetwork(network);
-
-            sendSuccess(request, "Configuracion STA actualizada"); });
+    server.on("/api/network/sta", HTTP_POST, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleStaUpdate(request, data, len); });
+    server.on("/api/network/sta", HTTP_PATCH, [](AsyncWebServerRequest *request) {}, nullptr, [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t, size_t)
+              { handleStaUpdate(request, data, len); });
 }
 
 void registerBeaconRoutes(AsyncWebServer &server)
@@ -260,7 +448,8 @@ void registerBeaconRoutes(AsyncWebServer &server)
     server.on("/api/map", HTTP_GET, [](AsyncWebServerRequest *request)
               {
     JsonDocument doc;
-    JsonArray arr = doc["map"].to<JsonArray>();
+    JsonObject data = createResponse(doc, true);
+    JsonArray arr = data["map"].to<JsonArray>();
 
     if (slotManager.lockMap())
     {
@@ -287,7 +476,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
 
     if (err)
     {
-        request->send(400, "application/json", "{\"error\":\"invalid json\"}");
+        sendError(request, 400, "invalid_json");
         return;
     }
 
@@ -298,7 +487,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
 
     if (index < 0 || index >= MAX_SLOTS || slot < 0 || slot >= MAX_SLOTS)
     {
-        request->send(400, "application/json", "{\"error\":\"invalid index/slot\"}");
+        sendError(request, 400, "invalid_index_or_slot");
         return;
     }
 
@@ -306,26 +495,27 @@ void registerBeaconRoutes(AsyncWebServer &server)
 
     if (!slotManager.setMapEntry(index, addr, slot, enabled))
     {
-        request->send(500, "application/json", "{\"error\":\"save failed\"}");
+        sendError(request, 500, "save_failed");
         return;
     }
 
-    request->send(200, "application/json", "{\"ok\":true}"); });
+    sendSuccess(request, "Mapa actualizado"); });
 
     server.on("/api/map", HTTP_DELETE, [](AsyncWebServerRequest *request)
               {
     if (!slotManager.clearMap())
     {
-        request->send(500, "application/json", "{\"error\":\"clear failed\"}");
+        sendError(request, 500, "clear_failed");
         return;
     }
 
-    request->send(200, "application/json", "{\"ok\":true}"); });
+    sendSuccess(request, "Mapa limpiado"); });
 
     server.on("/api/slots", HTTP_GET, [](AsyncWebServerRequest *request)
               {
     JsonDocument doc;
-    JsonArray arr = doc["slots"].to<JsonArray>();
+    JsonObject data = createResponse(doc, true);
+    JsonArray arr = data["slots"].to<JsonArray>();
 
     if (slotManager.lockSlots())
     {
@@ -352,29 +542,35 @@ void registerBeaconRoutes(AsyncWebServer &server)
     server.on("/api/beacons", HTTP_GET, [](AsyncWebServerRequest *request)
               {
         JsonDocument doc;
-        JsonArray arr = doc["items"].to<JsonArray>();
+        JsonObject data = createResponse(doc, true);
+        JsonArray arr = data["items"].to<JsonArray>();
+        DiscoveredBeacon snapshot[MAX_DISCOVERED_BEACONS]{};
 
-        const DiscoveredBeacon *items = beaconRegistry.items();
+        if (!beaconRegistry.snapshot(snapshot, MAX_DISCOVERED_BEACONS))
+        {
+            sendError(request, 500, "beacon_snapshot_failed");
+            return;
+        }
 
         for (int i = 0; i < MAX_DISCOVERED_BEACONS; ++i)
         {
-            if (!items[i].used) continue;
+            if (!snapshot[i].used) continue;
 
             JsonObject obj = arr.add<JsonObject>();
             obj["index"] = i;
-            obj["used"] = items[i].used;
-            obj["is_new"] = items[i].isNew;
-            obj["addr"] = addrToHex(items[i].addr);
-            obj["environment_id"] = items[i].environment_id;
-            obj["device_id"] = items[i].device_id;
-            obj["rssi"] = items[i].rssi;
-            obj["first_seen_ms"] = items[i].first_seen_ms;
-            obj["last_seen_ms"] = items[i].last_seen_ms;
-            obj["seen_count"] = items[i].seen_count;
+            obj["used"] = snapshot[i].used;
+            obj["is_new"] = snapshot[i].isNew;
+            obj["addr"] = addrToHex(snapshot[i].addr);
+            obj["environment_id"] = snapshot[i].environment_id;
+            obj["device_id"] = snapshot[i].device_id;
+            obj["rssi"] = snapshot[i].rssi;
+            obj["first_seen_ms"] = snapshot[i].first_seen_ms;
+            obj["last_seen_ms"] = snapshot[i].last_seen_ms;
+            obj["seen_count"] = snapshot[i].seen_count;
         }
 
-        doc["max"] = MAX_DISCOVERED_BEACONS;
-        doc["new_count"] = beaconRegistry.countNew();
+        data["max"] = MAX_DISCOVERED_BEACONS;
+        data["new_count"] = beaconRegistry.countNew();
 
         sendJson(request, 200, doc); });
 }  

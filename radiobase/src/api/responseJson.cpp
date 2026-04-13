@@ -9,6 +9,25 @@ void sendJson(AsyncWebServerRequest *request, int code, JsonDocument &doc)
     request->send(code, "application/json", out);
 }
 
+JsonObject createResponse(JsonDocument &doc, bool success, const String &message)
+{
+    doc["success"] = success;
+    if (!message.isEmpty())
+    {
+        doc["message"] = message;
+    }
+
+    return doc["data"].to<JsonObject>();
+}
+
+void sendData(AsyncWebServerRequest *request, int code, JsonDocument &doc, const String &message)
+{
+    JsonDocument outDoc;
+    JsonObject data = createResponse(outDoc, code >= 200 && code < 300, message);
+    data.set(doc.as<JsonVariantConst>());
+    sendJson(request, code, outDoc);
+}
+
 void ipToJson(JsonObject obj, const IpSettings &net)
 {
     obj["dhcp"] = net.dhcp;
@@ -75,6 +94,8 @@ void sendError(AsyncWebServerRequest *request, int code, const String &message)
     JsonDocument doc;
     doc["success"] = false;
     doc["message"] = message;
+    JsonObject error = doc["error"].to<JsonObject>();
+    error["code"] = message;
     sendJson(request, code, doc);
 }
 
@@ -83,6 +104,7 @@ void sendSuccess(AsyncWebServerRequest *request, const String &message)
     JsonDocument doc;
     doc["success"] = true;
     doc["message"] = message;
+    doc["data"].to<JsonObject>();
     sendJson(request, 200, doc);
 }
 

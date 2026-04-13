@@ -9,6 +9,8 @@ void ipToJson(JsonObject obj, const IpSettings &net);
 bool jsonToIpSettings(JsonObject obj, IpSettings &net, String &error);
 void sendError(AsyncWebServerRequest *request, int code, const String &message);
 void sendSuccess(AsyncWebServerRequest *request, const String &message);
+JsonObject createResponse(JsonDocument &doc, bool success, const String &message = "");
+void sendData(AsyncWebServerRequest *request, int code, JsonDocument &doc, const String &message = "");
 
 
 String uint64ToHex(uint64_t value);

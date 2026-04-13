@@ -3,7 +3,6 @@
 #include "core/appState.h"
 
 QueueHandle_t dataQ = nullptr;
-SemaphoreHandle_t slotsMutex = nullptr;
 TaskHandle_t advTaskHandle = nullptr;
 TaskHandle_t beaconLogicTaskHandle = nullptr;
 BlePipelineStats bleStats{};
@@ -149,7 +148,7 @@ void BleProceses::resetStats()
     bleStatsReset();
 }
 
-void BleProceses::begin()
+bool BleProceses::begin()
 {
     aes_init_key(KEY);
     ble_rx_init();
@@ -163,7 +162,7 @@ void BleProceses::begin()
     if (dataQ == nullptr)
     {
         Serial.println("BleProceses: No se pudo iniciar dataQ");
-        return;
+        return false;
     }
 
     BaseType_t ok = xTaskCreatePinnedToCore(
@@ -177,9 +176,9 @@ void BleProceses::begin()
 
     if (ok != pdPASS)
     {
-        // log de error si quieres
         Serial.println("BleProceses: No se pudo iniciar advProcessTask");
         advTaskHandle = nullptr;
+        return false;
     }
 
     BaseType_t ok2 = xTaskCreatePinnedToCore(
@@ -194,10 +193,12 @@ void BleProceses::begin()
     if (ok2 != pdPASS)
     {
         Serial.println("BleProceses: No se pudo iniciar beaconLogicTask");
-        return;
+        beaconLogicTaskHandle = nullptr;
+        return false;
     }
 
     Serial.println("BleProceses: Inicializado");
+    return true;
 }
 
 void BleProceses::advProcessTask(void *pvParameters)

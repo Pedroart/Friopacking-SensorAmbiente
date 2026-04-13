@@ -29,7 +29,6 @@ bool applyNetworkConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg
     else
     {
         WiFi.mode(WIFI_OFF);
-        return true;
     }
 
     bool ok = true;
@@ -120,7 +119,7 @@ bool applyNetworkConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg
         ethMac[4] = (chipid >> 8) & 0xFF;
         ethMac[5] = chipid & 0xFF;
 
-        ok = ETH.begin(
+        bool ethOk = ETH.begin(
             ETH_MISO,
             ETH_MOSI,
             ETH_SCK,
@@ -129,6 +128,8 @@ bool applyNetworkConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg
             ETH_SPI_CLOCK_MHZ,
             ETH_SPI_HOST,
             ethMac);
+
+        ok = ok && ethOk;
     }
 
     return ok;
