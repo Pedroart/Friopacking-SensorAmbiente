@@ -120,7 +120,7 @@ bool applyNetworkConfig(const NetworkConfig &Netcfg, const FeatureConfig &Feacfg
         ethMac[4] = (chipid >> 8) & 0xFF;
         ethMac[5] = chipid & 0xFF;
 
-        bool ok = ETH.begin(
+        ok = ETH.begin(
             ETH_MISO,
             ETH_MOSI,
             ETH_SCK,
