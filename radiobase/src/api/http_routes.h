@@ -4,3 +4,4 @@
 void registerHttpRoutes(AsyncWebServer &server);
 void registerNetworkRoutes(AsyncWebServer &server);
 void registerBeaconRoutes(AsyncWebServer &server);
+void registerFeatureRoutes(AsyncWebServer &server);

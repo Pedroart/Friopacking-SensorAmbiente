@@ -1,5 +1,8 @@
 #pragma once
 
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+#include "ble_pipeline_stats.h"
 #include "config.h"
 
 extern QueueHandle_t dataQ;

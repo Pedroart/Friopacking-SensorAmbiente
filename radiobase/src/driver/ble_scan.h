@@ -8,6 +8,8 @@
 class BleProceses {
 public:
     void begin();
+    BlePipelineStats stats() const;
+    void resetStats();
 
     static void advProcessTask(void *pvParameters);
     static void beaconLogicTask(void *pvParameters);

@@ -1,7 +1,10 @@
 #include "bleCallbacks.h"
+#include "ble_pipeline_stats.h"
 
 QueueHandle_t advQ = nullptr;
 NimBLEScan *scan = nullptr;
+static uint32_t lastAdvDropLogMs = 0;
+static constexpr uint32_t BLE_DROP_LOG_INTERVAL_MS = 5000;
 
 class ScanCallbacks : public NimBLEScanCallbacks
 {
@@ -51,7 +54,26 @@ class ScanCallbacks : public NimBLEScanCallbacks
         BaseType_t ok = xQueueSend(advQ, &m, 0);
         if (ok != pdTRUE)
         {
-            Serial.println("BLE: advQ llena o error al enviar");
+            bleStatsRecordAdvDropped(static_cast<uint32_t>(uxQueueMessagesWaiting(advQ)));
+            uint32_t now = millis();
+            if ((now - lastAdvDropLogMs) >= BLE_DROP_LOG_INTERVAL_MS)
+            {
+                lastAdvDropLogMs = now;
+                BlePipelineStats snapshot = bleStatsSnapshot();
+                Serial.printf(
+                    "BLE advQ drops adv=%lu data=%lu decrypt=%lu advDepth=%lu/%lu dataDepth=%lu/%lu\n",
+                    static_cast<unsigned long>(snapshot.adv_dropped),
+                    static_cast<unsigned long>(snapshot.data_dropped),
+                    static_cast<unsigned long>(snapshot.adv_decrypt_fail),
+                    static_cast<unsigned long>(snapshot.current_adv_depth),
+                    static_cast<unsigned long>(snapshot.max_adv_depth),
+                    static_cast<unsigned long>(snapshot.current_data_depth),
+                    static_cast<unsigned long>(snapshot.max_data_depth));
+            }
+        }
+        else
+        {
+            bleStatsRecordAdvReceived(static_cast<uint32_t>(uxQueueMessagesWaiting(advQ)));
         }
     }
 };
@@ -60,6 +82,15 @@ void ble_rx_init()
 {
     Serial.printf("BLE: Initializing BLE...");
     NimBLEDevice::init("");
+
+    if (!advQ)
+    {
+        const int ndevice = 16;
+        const int nsed = 3;
+
+        advQ = xQueueCreate(ndevice * nsed, sizeof(AdvRaw));
+        Serial.printf("BLE: Queue created");
+    }
 
     scan = NimBLEDevice::getScan();
     Serial.printf("BLE: Scan object created");
@@ -72,13 +103,4 @@ void ble_rx_init()
 
     scan->start(0, true, false);
     Serial.printf("BLE: Scan started");
-
-    if (!advQ)
-    {
-        const int ndevice = 16;
-        const int nsed = 3;
-
-        advQ = xQueueCreate(ndevice * nsed, sizeof(AdvRaw));
-        Serial.printf("BLE: Queue created");
-    }
 };

@@ -15,6 +15,36 @@ void registerHttpRoutes(AsyncWebServer &server)
 
     server.on("/api/device/info", HTTP_GET, [](AsyncWebServerRequest *request)
               { request->send(200, "application/json", "{\"device\":\"gateway\"}"); });
+
+    server.on("/api/ble/stats", HTTP_GET, [](AsyncWebServerRequest *request)
+              {
+        BlePipelineStats stats = advertising.stats();
+
+        JsonDocument doc;
+        JsonObject ble = doc["ble"].to<JsonObject>();
+
+        ble["adv_received"] = stats.adv_received;
+        ble["adv_dropped"] = stats.adv_dropped;
+        ble["adv_decrypt_fail"] = stats.adv_decrypt_fail;
+        ble["data_enqueued"] = stats.data_enqueued;
+        ble["data_dropped"] = stats.data_dropped;
+        ble["data_processed"] = stats.data_processed;
+        ble["mapped_updates"] = stats.mapped_updates;
+        ble["direct_updates"] = stats.direct_updates;
+        ble["registry_updates"] = stats.registry_updates;
+        ble["registry_new"] = stats.registry_new;
+        ble["current_adv_depth"] = stats.current_adv_depth;
+        ble["current_data_depth"] = stats.current_data_depth;
+        ble["max_adv_depth"] = stats.max_adv_depth;
+        ble["max_data_depth"] = stats.max_data_depth;
+        ble["max_end_to_end_ms"] = stats.max_end_to_end_ms;
+
+        sendJson(request, 200, doc); });
+
+    server.on("/api/ble/stats/reset", HTTP_POST, [](AsyncWebServerRequest *request)
+              {
+        advertising.resetStats();
+        request->send(200, "application/json", "{\"ok\":true}"); });
 }
 
 void registerFeatureRoutes(AsyncWebServer &server)
@@ -232,7 +262,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
     JsonDocument doc;
     JsonArray arr = doc["map"].to<JsonArray>();
 
-    if (slotManager.lock())
+    if (slotManager.lockMap())
     {
         BeaconMapEntry *map = slotManager.getMap();
 
@@ -245,7 +275,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
             obj["slot"] = map[i].slot;
         }
 
-        slotManager.unlock();
+        slotManager.unlockMap();
     }
 
     sendJson(request, 200, doc); });
@@ -297,7 +327,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
     JsonDocument doc;
     JsonArray arr = doc["slots"].to<JsonArray>();
 
-    if (slotManager.lock())
+    if (slotManager.lockSlots())
     {
         SlotState *slots = slotManager.getSlots();
 
@@ -314,7 +344,7 @@ void registerBeaconRoutes(AsyncWebServer &server)
             last["device_id"] = slots[i].last.device_id;
         }
 
-        slotManager.unlock();
+        slotManager.unlockSlots();
     }
 
     sendJson(request, 200, doc); });
