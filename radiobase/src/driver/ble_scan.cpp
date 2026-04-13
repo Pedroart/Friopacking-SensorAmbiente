@@ -7,9 +7,6 @@ SemaphoreHandle_t slotsMutex = nullptr;
 TaskHandle_t advTaskHandle = nullptr;
 TaskHandle_t beaconLogicTaskHandle = nullptr;
 
-BeaconMapEntry beaconMap[MAX_SLOTS];
-SlotState slots[MAX_SLOTS];
-
 static const uint8_t KEY[16] = {
     0xA3, 0x7F, 0x1C, 0xD9, 0x88, 0x4E, 0x21, 0xB6,
     0x59, 0x02, 0xEF, 0xC4, 0x6A, 0x90, 0x13, 0xDD};
@@ -27,12 +24,6 @@ void BleProceses::begin()
     if (dataQ == nullptr)
     {
         Serial.println("BleProceses: No se pudo iniciar dataQ");
-        return;
-    }
-
-    if (!slotManager.begin())
-    {
-        Serial.println("BleProceses: No se pudo iniciar SlotManager");
         return;
     }
 

@@ -16,6 +16,9 @@ void setup() {
     users = Config.loadUsers();
     network = Config.loadNetwork();
 
+    beaconRegistry.begin();
+    slotManager.begin();
+
     applyNetworkConfig(network,feature);
     
     webService.begin();

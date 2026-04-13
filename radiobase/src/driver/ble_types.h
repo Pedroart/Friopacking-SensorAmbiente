@@ -1,5 +1,7 @@
 #pragma once
 
+#include "config.h"
+
 extern QueueHandle_t dataQ;
 extern SemaphoreHandle_t slotsMutex;
 extern TaskHandle_t advTaskHandle;
@@ -15,11 +17,6 @@ extern TaskHandle_t advTaskHandle;
   int8_t BAT_x100 = 0;
 
 */
-
-#ifndef MAX_SLOTS
-#define MAX_SLOTS 40
-#endif
-
 
 #pragma pack(push,1)
 struct BeaconBody
